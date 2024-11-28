@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { MagicCard } from "@/components/ui/magic-card";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
-import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 import { ScrollBasedVelocity } from "@/components/ui/scroll-based-velocity";
 
@@ -121,7 +119,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="p-6">
               <p className="text-gray-600 mb-4">
-                "Encontré mis fotos del maratón en minutos. ¡El proceso de compra fue súper sencillo!"
+                &ldquo;Encontré mis fotos del maratón en minutos. ¡El proceso de compra fue súper sencillo!&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
@@ -144,7 +142,7 @@ export default function Home() {
 
             <Card className="p-6">
               <p className="text-gray-600 mb-4">
-                "Como fotógrafo, el sistema automatizado me ahorra horas de trabajo manual."
+                &ldquo;Como fotógrafo, el sistema automatizado me ahorra horas de trabajo manual.&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">

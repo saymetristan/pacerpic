@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Users, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Camera, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
