@@ -44,18 +44,17 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    const container = containerRef.current;
     const resizeObserver = new ResizeObserver(() => {
-      // Lógica para manejar el redimensionamiento
+      // Lógica del resize
     });
 
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
+    if (container) {
+      resizeObserver.observe(container);
     }
 
     return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
-      }
+      resizeObserver.unobserve(container!);
     };
   }, []);
 
