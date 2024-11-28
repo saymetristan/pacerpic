@@ -2,25 +2,41 @@
 
 import { HeroSection } from "@/components/sections/HeroSection";
 import { MainNav } from "@/components/navigation/MainNav";
-import { ArrowRight, Camera, Medal, Users } from "lucide-react";
+import { ArrowRight, Camera, Medal, Users, Twitter, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { MagicCard } from "@/components/ui/magic-card";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
+import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
+import { ScrollBasedVelocity } from "@/components/ui/scroll-based-velocity";
 
 export default function Home() {
   return (
     <main className="min-h-screen">
       <MainNav />
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen">
         <MagicCard 
-          className="w-full h-full"
+          className="w-full h-full relative overflow-hidden"
           gradientColor="#EC6533"
           gradientOpacity={0.3}
         >
-          <HeroSection />
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5"
+              alt="Runner crossing finish line"
+              fill
+              className="object-cover brightness-50"
+              sizes="100vw"
+              priority
+              quality={90}
+            />
+          </div>
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <HeroSection />
+          </div>
         </MagicCard>
       </section>
 
@@ -153,23 +169,101 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-[#1A3068] text-white">
-        <div className="container mx-auto px-4 text-center">
-          <AnimatedGradientText className="text-5xl md:text-7xl font-bold mb-6">
-            Captura tu momento de gloria
-          </AnimatedGradientText>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            No pierdas más tiempo buscando. Encuentra tus fotos al instante.
-          </p>
-          <ShimmerButton
-            className="text-lg font-semibold"
-            shimmerColor="#EC6533"
-            background="#1A3068"
-          >
-            Comenzar ahora <ArrowRight className="ml-2 h-4 w-4" />
-          </ShimmerButton>
+      <section className="relative bg-white py-20">
+        <div className="container relative mx-auto px-4">
+          <div className="max-w-5xl mx-auto text-center">
+            <ScrollBasedVelocity
+              text="Captura tu momento de gloria"
+              className="text-5xl md:text-7xl font-bold mb-6 text-[#1A3068]"
+              defaultVelocity={2}
+            />
+            
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-lg md:text-xl mb-8 text-[#4A4A4A]"
+            >
+              No pierdas más tiempo buscando. Encuentra tus fotos al instante.
+            </motion.p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button 
+                className="text-base font-semibold px-6 py-3 w-full sm:w-auto bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
+              >
+                Comenzar ahora <ArrowRight className="ml-2 h-4 w-4 inline-block" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="text-[#1A3068] hover:text-[#1A3068]/90 border-[#1A3068] hover:bg-[#1A3068]/10 w-full sm:w-auto"
+              >
+                Saber más
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Footer Section */}
+      <footer className="relative bg-[#1A3068]">
+        <MagicCard 
+          className="w-full py-16 bg-transparent"
+          gradientColor="#EC6533"
+          gradientOpacity={0.15}
+          gradientSize={300}
+        >
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+              <div>
+                <h3 className="text-white font-semibold mb-6">Navegación</h3>
+                <nav className="flex flex-col space-y-3">
+                  <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
+                    Inicio
+                  </Button>
+                  <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
+                    Buscar fotos
+                  </Button>
+                  <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
+                    Para fotógrafos
+                  </Button>
+                </nav>
+              </div>
+
+              <div>
+                <h3 className="text-white font-semibold mb-6">Legal</h3>
+                <nav className="flex flex-col space-y-3">
+                  <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
+                    Términos y condiciones
+                  </Button>
+                  <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
+                    Política de privacidad
+                  </Button>
+                </nav>
+              </div>
+
+              <div>
+                <h3 className="text-white font-semibold mb-6">Contacto</h3>
+                <p className="text-white/70 mb-4">contacto@pacerpic.com</p>
+                <div className="flex gap-4">
+                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white/70 hover:text-white">
+                    <Twitter className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white/70 hover:text-white">
+                    <Instagram className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 pt-8">
+              <p className="text-white/50 text-sm text-center">
+                © {new Date().getFullYear()} PacerPic. Todos los derechos reservados.
+              </p>
+            </div>
+          </div>
+        </MagicCard>
+      </footer>
     </main>
   );
 }
