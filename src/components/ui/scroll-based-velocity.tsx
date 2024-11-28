@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 
 interface VelocityScrollProps {
   text: string;
-  default_velocity?: number;
   className?: string;
+  default_velocity: number;
 }
 
 interface ParallaxProps {
@@ -32,8 +32,8 @@ export const wrap = (min: number, max: number, v: number) => {
 
 export function ScrollBasedVelocity({
   text,
-  default_velocity = 5,
   className,
+  default_velocity,
 }: VelocityScrollProps) {
   function ParallaxText({
     children,

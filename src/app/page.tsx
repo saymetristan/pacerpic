@@ -173,7 +173,7 @@ export default function Home() {
             <ScrollBasedVelocity
               text="Captura tu momento de gloria"
               className="text-5xl md:text-7xl font-bold mb-6 text-[#1A3068]"
-              defaultVelocity={2}
+              default_velocity={2}
             />
             
             <motion.p
