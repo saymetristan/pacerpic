@@ -1,37 +1,37 @@
 "use client";
 
-import { useState } from 'react';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
-import { Sidebar } from '@/components/layout/sidebar';
-import { Navbar } from '@/components/layout/navbar';
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { Navbar } from "@/components/layout/navbar";
+import { Sidebar } from "@/components/layout/sidebar";
+import { AdminSidebar } from "@/components/layout/admin-sidebar";
 
-export function DashboardProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+export function DashboardProvider({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
+
+  const isAdmin = pathname?.includes("/dashboard/admin");
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <div className="flex h-screen overflow-hidden">
-        <div className={`${sidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 ease-in-out`}>
-          <Sidebar collapsed={!sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        </div>
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-1 overflow-y-auto bg-background">
-            {children}
-          </main>
-        </div>
+    <div className="h-screen flex dark:bg-gray-950">
+      {isAdmin ? (
+        <AdminSidebar 
+          collapsed={collapsed} 
+          onToggle={() => setCollapsed(!collapsed)} 
+        />
+      ) : (
+        <Sidebar 
+          collapsed={collapsed} 
+          onToggle={() => setCollapsed(!collapsed)} 
+        />
+      )}
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar onMenuClick={() => setCollapsed(!collapsed)} />
+        <main className="flex-1 overflow-y-auto bg-gray-100/40 dark:bg-gray-800/40">
+          {children}
+        </main>
       </div>
-      <Toaster />
-    </ThemeProvider>
+    </div>
   );
 } 

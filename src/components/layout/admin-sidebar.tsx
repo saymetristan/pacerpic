@@ -2,51 +2,47 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Camera, BarChart3, Upload, Settings, Home, Image as ImageIcon, ChevronLeft } from "lucide-react";
+import { Calendar, Image as ImageIcon, Upload, ChevronLeft, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
 }
 
+const SIDEBAR_WIDTH = "16rem";
+const SIDEBAR_WIDTH_MOBILE = "18rem";
+const SIDEBAR_WIDTH_ICON = "4rem";
+
 const routes = [
   {
     label: "Panel Principal",
     icon: Home,
-    href: "/dashboard/photographer",
+    href: "/dashboard/admin",
   },
   {
-    label: "Mis Eventos",
-    icon: Camera,
-    href: "/dashboard/photographer/events",
+    label: "Eventos",
+    icon: Calendar,
+    href: "/dashboard/admin/events",
   },
   {
     label: "Galería",
     icon: ImageIcon,
-    href: "/dashboard/photographer/gallery",
+    href: "/dashboard/admin/gallery",
   },
   {
     label: "Subir Imágenes",
     icon: Upload,
-    href: "/dashboard/photographer/upload",
-  },
-  {
-    label: "Estadísticas",
-    icon: BarChart3,
-    href: "/dashboard/photographer/stats",
-  },
-  {
-    label: "Configuración",
-    icon: Settings,
-    href: "/dashboard/photographer/settings",
-  },
+    href: "/dashboard/admin/upload",
+  }
 ];
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function AdminSidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <div 
@@ -57,7 +53,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       <div className="p-4 flex items-center justify-between">
         <Link 
-          href="/dashboard/photographer" 
+          href="/dashboard/admin" 
           className={cn(
             "flex items-center",
             collapsed ? "justify-center w-full" : "justify-start"
@@ -79,7 +75,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           className={cn(
             "hidden lg:flex text-white transition-all duration-200",
             collapsed 
-              ? "absolute -right-4 top-6 bg-[#1A3068] hover:bg-[#EC6533] rounded-full shadow-md z-50" 
+              ? "absolute -right-4 top-6 bg-[#1A3068] hover:bg-[#EC6533] rounded-full shadow-md" 
               : "hover:bg-[#EC6533]/10"
           )}
         >
@@ -113,4 +109,4 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
     </div>
   );
-}
+} 
