@@ -1,6 +1,4 @@
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'] });
+import { DashboardProvider } from "@/components/providers/dashboard-provider";
 
 export const metadata = {
   title: 'PacerPic - Dashboard de Administrador',
@@ -12,5 +10,9 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <DashboardProvider>
+      {children}
+    </DashboardProvider>
+  );
 } 

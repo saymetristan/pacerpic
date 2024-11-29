@@ -10,7 +10,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
-  const isAdmin = pathname?.includes("/dashboard/admin");
+  const isAdmin = pathname?.includes("/admin");
 
   return (
     <div className="h-screen flex dark:bg-gray-950">

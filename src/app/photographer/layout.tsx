@@ -1,16 +1,15 @@
-import '../globals.css';
-import type { Metadata } from 'next';
+import '@/app/globals.css';
 import { Inter } from 'next/font/google';
 import { DashboardProvider } from '@/components/providers/dashboard-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'PacerPic - Dashboard de Fotógrafo',
-  description: 'Gestiona tus eventos y fotografías deportivas con PacerPic',
+  description: 'Gestiona tus eventos y fotografías deportivas',
 };
 
-export default function RootLayout({
+export default function PhotographerLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -24,4 +23,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+} 
