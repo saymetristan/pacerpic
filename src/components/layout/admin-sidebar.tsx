@@ -2,7 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Image as ImageIcon, Upload, ChevronLeft, Home } from "lucide-react";
+import { Calendar, Image as ImageIcon, Upload, ChevronLeft, Home, LogOut, User, ChevronUp } from "lucide-react";
+import { useUser } from '@auth0/nextjs-auth0/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,39 +28,38 @@ const routes = [
   {
     label: "Panel Principal",
     icon: Home,
-    href: "/dashboard/admin",
+    href: "/admin",
   },
   {
     label: "Eventos",
     icon: Calendar,
-    href: "/dashboard/admin/events",
+    href: "/admin/events",
   },
   {
     label: "Galería",
     icon: ImageIcon,
-    href: "/dashboard/admin/gallery",
+    href: "/admin/gallery",
   },
   {
     label: "Subir Imágenes",
     icon: Upload,
-    href: "/dashboard/admin/upload",
+    href: "/admin/upload",
   }
 ];
 
 export function AdminSidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { user } = useUser();
 
   return (
-    <div 
-      className={cn(
-        "relative h-full bg-slate-900 text-white transition-all duration-200",
-        collapsed ? "w-[4.5rem]" : "w-64"
-      )}
-    >
+    <div className={cn(
+      "relative h-full bg-slate-900 text-white transition-all duration-200 flex flex-col",
+      collapsed ? "w-[4.5rem]" : "w-64"
+    )}>
       <div className="p-4 flex items-center justify-between">
         <Link 
-          href="/dashboard/admin" 
+          href="/admin" 
           className={cn(
             "flex items-center",
             collapsed ? "justify-center w-full" : "justify-start"
@@ -86,7 +92,7 @@ export function AdminSidebar({ collapsed, onToggle }: SidebarProps) {
         </Button>
       </div>
 
-      <div className="space-y-2 px-3">
+      <div className="space-y-2 px-3 mt-2">
         {routes.map((route) => (
           <Button
             key={route.href}
@@ -106,6 +112,49 @@ export function AdminSidebar({ collapsed, onToggle }: SidebarProps) {
             </Link>
           </Button>
         ))}
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="p-3 border-t border-white/10 mt-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full transition-colors duration-200",
+                "text-white/70 hover:bg-[#EC6533]/10 hover:text-white",
+                collapsed ? "px-2 justify-center" : "px-4 justify-between"
+              )}
+            >
+              {!collapsed && (
+                <span className="truncate">
+                  {user?.name || user?.email}
+                </span>
+              )}
+              <User className={cn("h-5 w-5", collapsed ? "" : "ml-2")} />
+              {!collapsed && <ChevronUp className="h-4 w-4 ml-2" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align={collapsed ? "center" : "end"}
+            className="w-56 bg-slate-900 text-white border-slate-800"
+          >
+            <DropdownMenuItem className="hover:bg-[#EC6533]/10 hover:text-white focus:bg-[#EC6533]/10 focus:text-white">
+              <User className="mr-2 h-4 w-4" />
+              <span>Mi Perfil</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              asChild
+            >
+              <a href="/api/auth/logout">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar Sesión</span>
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
