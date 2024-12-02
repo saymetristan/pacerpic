@@ -50,7 +50,7 @@ const defaultValues: Partial<EventFormValues> = {
 };
 
 interface EventDialogProps {
-  event: {
+  event?: {
     id: number;
     name: string;
     date: string;
