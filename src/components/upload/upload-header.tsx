@@ -7,8 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEvents } from "@/hooks/use-events";
 
-export function UploadHeader() {
+export function UploadHeader({ onEventChange }: { onEventChange: (eventId: string) => void }) {
+  const events = useEvents();
+
   return (
     <div className="space-y-4">
       <div>
@@ -18,14 +21,16 @@ export function UploadHeader() {
         </p>
       </div>
       <div className="flex items-center gap-4">
-        <Select>
+        <Select onValueChange={onEventChange}>
           <SelectTrigger className="w-[300px]">
             <SelectValue placeholder="Selecciona un evento" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="madrid2024">Maratón de Madrid 2024</SelectItem>
-            <SelectItem value="trail2024">Trail Sierra Norte</SelectItem>
-            <SelectItem value="sansilv2023">San Silvestre Vallecana</SelectItem>
+            {events.map(event => (
+              <SelectItem key={event.id} value={event.id}>
+                {event.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

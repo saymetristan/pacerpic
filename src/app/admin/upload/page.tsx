@@ -1,15 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import { UploadHeader } from "@/components/upload/upload-header";
 import { UploadZone } from "@/components/upload/upload-zone";
-import { UploadProgress } from "@/components/upload/upload-progress";
 
-export default function AdminUploadPage() {
+export default function UploadPage() {
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+
   return (
-    <div className="p-8 space-y-8">
-      <UploadHeader />
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
-        <UploadZone />
-        <UploadProgress />
-      </div>
+    <div className="space-y-8">
+      <UploadHeader onEventChange={setSelectedEventId} />
+      {selectedEventId && <UploadZone eventId={selectedEventId} />}
     </div>
   );
 } 

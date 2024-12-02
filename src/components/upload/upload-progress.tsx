@@ -4,33 +4,35 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 
-export function UploadProgress() {
+interface UploadProgressProps {
+  files: {
+    name: string;
+    progress: number;
+    status: 'pending' | 'processing' | 'processed' | 'error';
+  }[];
+}
+
+export function UploadProgress({ files }: UploadProgressProps) {
+  const totalFiles = files.length;
+  const completed = files.filter(f => f.status === 'processed').length;
+  const processing = files.filter(f => f.status === 'processing').length;
+  const pending = files.filter(f => f.status === 'pending').length;
+  const failed = files.filter(f => f.status === 'error').length;
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border p-4">
         <h3 className="font-semibold mb-4">Progreso de Subida</h3>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>imagen_001.jpg</span>
-              <span>75%</span>
+          {files.map((file, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>{file.name}</span>
+                <span>{file.progress}%</span>
+              </div>
+              <Progress value={file.progress} />
             </div>
-            <Progress value={75} />
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>imagen_002.jpg</span>
-              <span>45%</span>
-            </div>
-            <Progress value={45} />
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>imagen_003.jpg</span>
-              <span>20%</span>
-            </div>
-            <Progress value={20} />
-          </div>
+          ))}
         </div>
       </div>
 
@@ -39,20 +41,26 @@ export function UploadProgress() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Total de imágenes</span>
-            <span>15</span>
+            <span>{totalFiles}</span>
           </div>
           <div className="flex justify-between">
             <span>Subidas completadas</span>
-            <span>8</span>
+            <span>{completed}</span>
           </div>
           <div className="flex justify-between">
             <span>En progreso</span>
-            <span>3</span>
+            <span>{processing}</span>
           </div>
           <div className="flex justify-between">
             <span>Pendientes</span>
-            <span>4</span>
+            <span>{pending}</span>
           </div>
+          {failed > 0 && (
+            <div className="flex justify-between text-red-500">
+              <span>Fallidas</span>
+              <span>{failed}</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -5,14 +5,11 @@ import type { NextRequest } from 'next/server';
 export default withMiddlewareAuthRequired(async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const session = await getSession(req, res);
-  const { pathname } = req.nextUrl;
-
-  // Solo protege las rutas de admin
-  if (pathname.startsWith('/admin')) {
-    // Asegúrate de reemplazar con tu email
-    if (!session?.user || session.user.email !== 'admin@pacerpic.com') {
-      // Si no es el admin, redirige al home
-      return NextResponse.redirect(new URL('/', req.url));
+  
+  // Proteger rutas de admin y upload
+  if (req.nextUrl.pathname.startsWith('/admin') || req.nextUrl.pathname.startsWith('/api/images/upload')) {
+    if (!session?.user) {
+      return NextResponse.redirect(new URL('/api/auth/login', req.url));
     }
   }
 
@@ -20,8 +17,5 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
 });
 
 export const config = {
-  matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*'
-  ]
+  matcher: ['/admin/:path*', '/api/images/upload']
 }; 

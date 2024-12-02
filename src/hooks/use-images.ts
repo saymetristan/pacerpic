@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { db } from '@/lib/db';
-import { uploadImage, getImageUrl } from '@/lib/storage-helpers';
 
 export function useImages() {
   const [isUploading, setIsUploading] = useState(false);
@@ -10,26 +8,18 @@ export function useImages() {
     try {
       setIsUploading(true);
       
-      // Subir imagen original
-      const path = `events/${eventId}/${file.name}`;
-      const { data: uploadData } = await uploadImage(file, path);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('eventId', eventId);
       
-      if (!uploadData?.path) throw new Error('Error al subir la imagen');
+      const response = await fetch('/api/images/upload', {
+        method: 'POST',
+        body: formData
+      });
 
-      // Guardar referencia en la base de datos
-      const { data: imageData, error } = await db
-        .from('images')
-        .insert({
-          event_id: eventId,
-          original_url: uploadData.path,
-          compressed_url: '', // Se actualizará cuando el trigger procese la imagen
-          status: 'processing'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      if (!response.ok) throw new Error('Error al subir imagen');
+      
+      const imageData = await response.json();
       return imageData;
     } finally {
       setIsUploading(false);
@@ -37,9 +27,5 @@ export function useImages() {
     }
   };
 
-  return {
-    uploadEventImage,
-    isUploading,
-    progress
-  };
+  return { uploadEventImage, isUploading, progress };
 } 
