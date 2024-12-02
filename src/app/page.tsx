@@ -42,50 +42,10 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-[#1A3068] mb-16">
-            Una plataforma para todos
+            Herramientas para Organizadores
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Runners Card */}
-            <MagicCard 
-              className="p-6 hover:shadow-lg transition-shadow"
-              gradientColor="#EC6533"
-              gradientSize={150}
-            >
-              <div className="mb-4">
-                <Medal className="h-12 w-12 text-[#EC6533]" />
-              </div>
-              <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
-                Corredores
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Encuentra tus fotos al instante usando tu número de dorsal. Sin necesidad de registro.
-              </p>
-              <Button variant="link" className="text-[#EC6533] p-0">
-                Buscar fotos <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </MagicCard>
-
-            {/* Photographers Card */}
-            <MagicCard 
-              className="p-6 hover:shadow-lg transition-shadow"
-              gradientColor="#EC6533"
-              gradientSize={150}
-            >
-              <div className="mb-4">
-                <Camera className="h-12 w-12 text-[#EC6533]" />
-              </div>
-              <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
-                Fotógrafos
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Sube y vende tus fotos con nuestro proceso automatizado de etiquetado y procesamiento.
-              </p>
-              <Button variant="link" className="text-[#EC6533] p-0">
-                Comenzar ahora <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </MagicCard>
-
             {/* Organizers Card */}
             <MagicCard 
               className="p-6 hover:shadow-lg transition-shadow"
@@ -96,13 +56,53 @@ export default function Home() {
                 <Users className="h-12 w-12 text-[#EC6533]" />
               </div>
               <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
-                Organizadores
+                Gestión de Eventos
               </h3>
               <p className="text-gray-600 mb-4">
-                Gestiona tus eventos y obtén análisis detallados del rendimiento fotográfico.
+                Crea y administra tus eventos deportivos de manera eficiente.
               </p>
               <Button variant="link" className="text-[#EC6533] p-0">
-                Descubre más <ArrowRight className="ml-2 h-4 w-4" />
+                Administrar eventos <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </MagicCard>
+
+            {/* Image Upload Card */}
+            <MagicCard 
+              className="p-6 hover:shadow-lg transition-shadow"
+              gradientColor="#EC6533"
+              gradientSize={150}
+            >
+              <div className="mb-4">
+                <Camera className="h-12 w-12 text-[#EC6533]" />
+              </div>
+              <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
+                Subida de Imágenes
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Carga y etiqueta automáticamente las fotos de tus eventos con los dorsales de los participantes.
+              </p>
+              <Button variant="link" className="text-[#EC6533] p-0">
+                Subir imágenes <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </MagicCard>
+
+            {/* Photo Management Card */}
+            <MagicCard 
+              className="p-6 hover:shadow-lg transition-shadow"
+              gradientColor="#EC6533"
+              gradientSize={150}
+            >
+              <div className="mb-4">
+                <Medal className="h-12 w-12 text-[#EC6533]" />
+              </div>
+              <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
+                Visualización y Descarga
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Accede rápidamente a las fotos etiquetadas y permite a los participantes descargarlas sin complicaciones.
+              </p>
+              <Button variant="link" className="text-[#EC6533] p-0">
+                Ver y Descargar <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </MagicCard>
           </div>
@@ -119,7 +119,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="p-6">
               <p className="text-gray-600 mb-4">
-                &ldquo;Encontré mis fotos del maratón en minutos. ¡El proceso de compra fue súper sencillo!&rdquo;
+                &ldquo;La plataforma facilitó la gestión de mi evento y la descarga rápida de las fotos fue excelente.&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
@@ -135,14 +135,14 @@ export default function Home() {
                   <AnimatedGradientText className="font-semibold">
                     Ana García
                   </AnimatedGradientText>
-                  <p className="text-sm text-gray-500">Corredora</p>
+                  <p className="text-sm text-gray-500">Organizadora de Eventos</p>
                 </div>
               </div>
             </Card>
 
             <Card className="p-6">
               <p className="text-gray-600 mb-4">
-                &ldquo;Como fotógrafo, el sistema automatizado me ahorra horas de trabajo manual.&rdquo;
+                &ldquo;La automatización en la subida y etiquetado de imágenes ahorró mucho tiempo y esfuerzo.&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
@@ -158,7 +158,7 @@ export default function Home() {
                   <AnimatedGradientText className="font-semibold">
                     Carlos Ruiz
                   </AnimatedGradientText>
-                  <p className="text-sm text-gray-500">Fotógrafo deportivo</p>
+                  <p className="text-sm text-gray-500">Fotógrafo Deportivo</p>
                 </div>
               </div>
             </Card>
@@ -171,7 +171,7 @@ export default function Home() {
         <div className="container relative mx-auto px-4">
           <div className="max-w-5xl mx-auto text-center">
             <ScrollBasedVelocity
-              text="Captura tu momento de gloria"
+              text="Optimiza la gestión de tus eventos"
               className="text-5xl md:text-7xl font-bold mb-6 text-[#1A3068]"
               default_velocity={2}
             />
@@ -182,21 +182,21 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-lg md:text-xl mb-8 text-[#4A4A4A]"
             >
-              No pierdas más tiempo buscando. Encuentra tus fotos al instante.
+              Simplifica la administración de tus eventos deportivos con nuestra plataforma intuitiva.
             </motion.p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 className="text-base font-semibold px-6 py-3 w-full sm:w-auto bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
               >
-                Comenzar ahora <ArrowRight className="ml-2 h-4 w-4 inline-block" />
+                Empezar ahora <ArrowRight className="ml-2 h-4 w-4 inline-block" />
               </Button>
               
               <Button 
                 variant="outline" 
                 className="text-[#1A3068] hover:text-[#1A3068]/90 border-[#1A3068] hover:bg-[#1A3068]/10 w-full sm:w-auto"
               >
-                Saber más
+                Contactar Ventas
               </Button>
             </div>
           </div>
@@ -220,10 +220,10 @@ export default function Home() {
                     Inicio
                   </Button>
                   <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
-                    Buscar fotos
+                    Subir imágenes
                   </Button>
                   <Button variant="link" className="text-white/70 hover:text-white justify-start p-0 h-auto font-normal">
-                    Para fotógrafos
+                    Panel de Organizadores
                   </Button>
                 </nav>
               </div>

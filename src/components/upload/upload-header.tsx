@@ -10,7 +10,7 @@ import {
 import { useEvents } from "@/hooks/use-events";
 
 export function UploadHeader({ onEventChange }: { onEventChange: (eventId: string) => void }) {
-  const events = useEvents();
+  const { events, loading } = useEvents();
 
   return (
     <div className="flex items-center justify-between">
@@ -21,12 +21,12 @@ export function UploadHeader({ onEventChange }: { onEventChange: (eventId: strin
         </p>
       </div>
       <div className="flex items-center gap-4">
-        <Select onValueChange={onEventChange}>
+        <Select onValueChange={onEventChange} disabled={loading}>
           <SelectTrigger className="w-[300px]">
-            <SelectValue placeholder="Selecciona un evento" />
+            <SelectValue placeholder={loading ? "Cargando eventos..." : "Selecciona un evento"} />
           </SelectTrigger>
           <SelectContent>
-            {events.map(event => (
+            {events?.map(event => (
               <SelectItem key={event.id} value={event.id}>
                 {event.name}
               </SelectItem>

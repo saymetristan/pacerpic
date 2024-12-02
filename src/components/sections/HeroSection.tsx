@@ -21,7 +21,7 @@ export function HeroSection() {
         transition={{ duration: 0.8, delay: 0.2 }}
         className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto"
       >
-        Encuentra y compra tus fotos deportivas al instante. Sin registro, sin complicaciones.
+        Encuentra tus fotos deportivas al instante. Sin registro, sin complicaciones.
       </motion.p>
       
       <SearchForm />

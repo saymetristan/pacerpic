@@ -72,7 +72,8 @@ const config: Config = {
   			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
   			'border-beam': 'border-beam calc(var(--duration)*1s) infinite linear',
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'background-position-spin': 'background-position-spin 3000ms infinite alternate'
   		},
   		keyframes: {
   			gradient: {
@@ -118,6 +119,14 @@ const config: Config = {
   				},
   				to: {
   					height: '0'
+  				}
+  			},
+  			'background-position-spin': {
+  				'0%': {
+  					backgroundPosition: 'top center'
+  				},
+  				'100%': {
+  					backgroundPosition: 'bottom center'
   				}
   			}
   		}

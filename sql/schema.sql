@@ -7,7 +7,7 @@ CREATE TABLE events (
   name VARCHAR NOT NULL,
   date DATE NOT NULL,
   location VARCHAR,
-  organizer_id UUID REFERENCES auth.users(id),
+  organizer_id TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -15,11 +15,19 @@ CREATE TABLE events (
 CREATE TABLE images (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   event_id UUID REFERENCES events(id),
-  photographer_id UUID REFERENCES auth.users(id),
+  photographer_id TEXT NOT NULL,
   original_url TEXT NOT NULL,
   compressed_url TEXT NOT NULL,
-  dorsal_number VARCHAR,
   status VARCHAR DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Tabla de dorsales en imágenes
+CREATE TABLE image_dorsals (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  image_id UUID REFERENCES images(id),
+  dorsal_number TEXT NOT NULL,
+  confidence FLOAT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -33,4 +41,4 @@ CREATE TABLE sales (
   download_url TEXT,
   download_expires_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-); 
+);
