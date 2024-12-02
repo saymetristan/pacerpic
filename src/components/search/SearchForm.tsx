@@ -1,3 +1,5 @@
+// src/components/search/SearchForm.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -17,12 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Si tienes la interfaz Event en un archivo separado, impórtala aquí
+// import { Event } from "@/hooks/use-events";
+
 export function SearchForm() {
   const router = useRouter();
   const { events, loading } = useEvents();
-  const [selectedRace, setSelectedRace] = useState("");
-  const [dorsal, setDorsal] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRace, setSelectedRace] = useState<string>("");
+  const [dorsal, setDorsal] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleDorsalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
@@ -57,23 +62,23 @@ export function SearchForm() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-          {events.map((event) => (
-            <SelectItem key={event.id} value={event.id}>
-              <div className="flex flex-col space-y-1">
-                <span className="font-medium">{event.name}</span>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{format(new Date(event.date), "d MMM yyyy", { locale: es })}</span>
-                  {event.images_count > 0 && (
-                    <div className="flex items-center gap-1 text-[#EC6533]">
-                      <Camera className="h-3 w-3" />
-                      <span>{event.images_count.toLocaleString()} fotos</span>
-                    </div>
-                  )}
+            {events.map((event) => (
+              <SelectItem key={event.id} value={event.id}>
+                <div className="flex flex-col space-y-1">
+                  <span className="font-medium">{event.name}</span>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{format(new Date(event.date), "d MMM yyyy", { locale: es })}</span>
+                    {event.images_count > 0 && (
+                      <div className="flex items-center gap-1 text-[#EC6533]">
+                        <Camera className="h-3 w-3" />
+                        <span>{event.images_count.toLocaleString()} fotos</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
 
         <div className="flex flex-col sm:flex-row gap-4">
