@@ -50,13 +50,14 @@ const defaultValues: Partial<EventFormValues> = {
 };
 
 interface EventDialogProps {
-  event?: {
+  event: {
     id: number;
     name: string;
     date: string;
-    location: string;
+    location?: string; // Ahora opcional
     description?: string;
-    organizerContact: string;
+    organizerContact?: string; // Ahora opcional
+    status: string;
   };
 }
 
