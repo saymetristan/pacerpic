@@ -60,7 +60,7 @@ export function useAuthSync() {
     }
 
     syncUser();
-  }, [user, isLoading]);
+  }, [user, isLoading, supabase]);
 
   return { user, isLoading };
 } 

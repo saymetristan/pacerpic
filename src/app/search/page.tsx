@@ -6,10 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
 import { useTheme } from "next-themes";
-import { motion, AnimatePresence } from "framer-motion";
 import { NoResults } from "@/components/search/NoResults";
 
 const ITEMS_PER_PAGE = 9;

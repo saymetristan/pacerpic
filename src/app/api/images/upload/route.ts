@@ -1,7 +1,5 @@
 import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { getSession } from '@auth0/nextjs-auth0';
 
 export async function POST(req: Request) {
