@@ -1,45 +1,58 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload } from "lucide-react";
+import { Upload, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useImages } from "@/hooks/use-images";
-import { UploadProgress } from "./upload-progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export function UploadZone({ eventId }: { eventId: string }) {
-  const { uploadEventImage, uploadProgress } = useImages();
-  const [files, setFiles] = useState<File[]>([]);
+interface UploadZoneProps {
+  onUpload: (files: File[]) => Promise<void>;
+  isUploading: boolean;
+}
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    setFiles(prev => [...prev, ...acceptedFiles]);
-    
-    await Promise.all(
-      acceptedFiles.map(file => uploadEventImage(file, eventId))
-    );
-  }, [eventId, uploadEventImage]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-
-  // Convertir el objeto de progreso a array para UploadProgress
-  const progressFiles = Object.values(uploadProgress);
+export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: onUpload,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png']
+    },
+    disabled: isUploading
+  });
 
   return (
-    <div className="space-y-6">
-      <div {...getRootProps()} className={cn(
-        "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer",
-        isDragActive && "border-primary bg-primary/10"
-      )}>
-        <input {...getInputProps()} />
-        <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          Arrastra tus imágenes aquí o haz clic para seleccionarlas
-        </p>
-      </div>
-
-      {progressFiles.length > 0 && (
-        <UploadProgress files={progressFiles} />
-      )}
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <div
+          {...getRootProps()}
+          className={cn(
+            "relative border-2 border-dashed rounded-lg transition-all duration-200 p-8",
+            isDragActive ? "border-primary bg-primary/5" : "border-muted",
+            isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-primary/50"
+          )}
+        >
+          <input {...getInputProps()} disabled={isUploading} />
+          <div className="flex flex-col items-center gap-4">
+            <div className={cn(
+              "p-4 rounded-full bg-muted",
+              isDragActive && "bg-primary/10"
+            )}>
+              <ImageIcon className={cn(
+                "h-8 w-8",
+                isDragActive ? "text-primary" : "text-muted-foreground"
+              )} />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="font-semibold">
+                {isDragActive ? "Suelta para subir" : "Arrastra tus imágenes aquí"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                o haz clic para seleccionarlas
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

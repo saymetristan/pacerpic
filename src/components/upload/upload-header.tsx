@@ -13,7 +13,7 @@ export function UploadHeader({ onEventChange }: { onEventChange: (eventId: strin
   const events = useEvents();
 
   return (
-    <div className="space-y-4">
+    <div className="flex items-center justify-between">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Subir Imágenes</h2>
         <p className="text-muted-foreground">
