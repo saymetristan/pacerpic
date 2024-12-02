@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { UploadHeader } from "@/components/upload/upload-header";
 import { UploadZone } from "@/components/upload/upload-zone";
