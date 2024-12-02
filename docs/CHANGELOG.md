@@ -1,5 +1,39 @@
 # Changelog PacerPic
 
+## [0.1.1] - 2024-02-12
+
+### Corrección de Autenticación y Procesamiento de Imágenes
+- ✅ Optimización de sincronización Auth0-Supabase:
+  - Implementación de `useAuthSync` hook para sincronización bidireccional
+  - Manejo de sesiones con `createClientComponentClient`
+  - Persistencia automática de usuarios Auth0 en tabla `users` de Supabase
+  - Sincronización de roles y metadatos entre sistemas
+
+- ✅ Mejora del procesamiento de imágenes:
+  - Migración a `createClient` con `SUPABASE_SERVICE_ROLE_KEY` para operaciones del servidor
+  - Implementación de verificación de roles basada en tabla `users`
+  - Optimización de políticas de storage para buckets `originals` y `compressed`
+  - Corrección de permisos para subida de imágenes
+  - Implementación de logging detallado para debugging
+
+### Detalles Técnicos
+- Reemplazo de `createServerComponentClient` por `createClient` en `image-processing.ts`
+- Configuración de cliente Supabase con `autoRefreshToken: false` y `persistSession: false`
+- Implementación de verificación de roles usando `auth0_id`
+- Optimización de políticas RLS para storage
+- Mejora en el manejo de errores y logging
+
+### Seguridad
+- ✅ Implementación de verificación de roles más robusta
+- ✅ Uso de service role key para operaciones críticas
+- ✅ Separación clara de contextos de autenticación cliente/servidor
+- ✅ Logging mejorado para auditoría de operaciones
+
+### Documentación
+- ✅ Actualización de documentación de integración Auth0-Supabase
+- ✅ Documentación de flujo de autenticación y procesamiento de imágenes
+- ✅ Guías de troubleshooting para problemas comunes
+
 ## [0.1.0] - 2024-11-30
 
 ### Configuración de Supabase

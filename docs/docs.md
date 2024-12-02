@@ -50,14 +50,14 @@
   - **shadcn/ui:** Para componentes estilizados.
   - **MagicUI:** Para animaciones avanzadas.
 - **Estilización:** Tailwind CSS
-- **Autenticación:** Clerk
+- **Autenticación:** Auth0
 
 ### Backend
 - **Framework:** Next.js API Routes
 - **Procesamiento de Imágenes:** Sharp
 - **Almacenamiento de Imágenes:** Supabase Storage
 - **Base de Datos:** Supabase PostgreSQL
-- **Pagos:** MercadoPago u Openpay
+- **Pagos:** Openpay o Stripe
 
 ### Herramientas Adicionales
 - **Redis:** Para gestionar colas de trabajos en el procesamiento de imágenes (opcional en este MVP si la carga de imágenes es baja, pero recomendado si los fotógrafos suben muchas imágenes simultáneamente).
@@ -138,7 +138,7 @@
 ## Plan de Desarrollo
 
 ### Semana 1: Configuración Inicial
-1. Configurar Next.js con Tailwind CSS, shadcn/ui, magic ui y Clerk.
+1. Configurar Next.js con Tailwind CSS, shadcn/ui, magic ui y supabase authenticathion.
 2. Configurar Supabase para almacenamiento y base de datos.
 
 ### Semana 2: Funcionalidad para Corredores

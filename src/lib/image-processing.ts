@@ -1,7 +1,6 @@
 import sharp from 'sharp';
 import OpenAI from 'openai';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,16 +14,50 @@ export async function processImage(
   accessToken: string
 ) {
   try {
-    const supabase = createServerComponentClient({ 
-      cookies,
-      options: {
-        db: {
-          schema: 'public'
-        },
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
         auth: {
+          autoRefreshToken: false,
           persistSession: false
         }
       }
+    );
+
+    // Verificar rol del usuario directamente con el ID
+    const { data: user, error: roleError } = await supabase
+      .from('users')
+      .select('role, id')
+      .eq('auth0_id', photographerId)
+      .single();
+
+    console.log('User Check:', { user, roleError, photographerId });
+
+    if (!user || roleError) {
+      console.error('Error verificando usuario:', roleError);
+      throw new Error('Error de autenticación');
+    }
+
+    // Establecer el contexto de auth para las siguientes operaciones
+    supabase.auth.setSession({
+      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      refresh_token: '',
+    });
+
+    // Verificar políticas actuales
+    const { data: policies, error: policiesError } = await supabase
+      .rpc('get_policies');
+
+    console.log('Storage Policies:', { policies, policiesError });
+
+    // Log de la información de autenticación
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    console.log('Auth Session:', {
+      session: session ? 'Exists' : 'None',
+      error: authError,
+      userId: session?.user?.id,
+      userMetadata: session?.user?.user_metadata
     });
 
     console.log('Iniciando procesamiento de imagen:', { fileName, eventId, photographerId });

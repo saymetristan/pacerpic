@@ -14,16 +14,17 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
+    const photographerId = formData.get('photographerId') as string;
 
-    if (!file || !eventId || !isValidUUID(eventId)) {
+    if (!file || !eventId || !isValidUUID(eventId) || !photographerId) {
       return NextResponse.json(
-        { error: 'Archivo y eventId (UUID válido) son requeridos' },
+        { error: 'Archivo, eventId (UUID válido) y photographerId son requeridos' },
         { status: 400 }
       );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageData = await processImage(buffer, file.name, eventId, session.user.sub, session.accessToken);
+    const imageData = await processImage(buffer, file.name, eventId, photographerId, session.accessToken);
 
     return NextResponse.json(imageData);
   } catch (error) {
