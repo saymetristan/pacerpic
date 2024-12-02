@@ -21,6 +21,8 @@ const events = [
     soldImages: 438,
     revenue: 6570,
     status: "active",
+    location: "Madrid, España",
+    organizerContact: "contacto@maratonmadrid.com",
   },
   {
     id: 2,
@@ -30,6 +32,8 @@ const events = [
     soldImages: 324,
     revenue: 4860,
     status: "active",
+    location: "Sierra Norte, España",
+    organizerContact: "contacto@trailsierranorte.com",
   },
   {
     id: 3,
@@ -39,8 +43,11 @@ const events = [
     soldImages: 892,
     revenue: 13380,
     status: "completed",
+    location: "Vallecas, España",
+    organizerContact: "contacto@sansilvestrevallecana.com",
   },
 ];
+
 
 export function EventsTable() {
   return (

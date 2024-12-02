@@ -18,8 +18,8 @@ interface EventActionsProps {
     id: number;
     name: string;
     date: string;
-    location: string;
-    organizerContact: string;
+    location?: string; 
+    organizerContact?: string; 
     status: string;
   };
 }
