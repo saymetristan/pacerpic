@@ -21,8 +21,13 @@ export async function POST(req: Request) {
       );
     }
 
+    const accessToken = session.accessToken;
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Token de acceso no encontrado' }, { status: 401 });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageData = await processImage(buffer, file.name, eventId, photographerId, session.accessToken);
+    const imageData = await processImage(buffer, file.name, eventId, photographerId, accessToken);
 
     return NextResponse.json(imageData);
   } catch (error) {
@@ -37,4 +42,4 @@ export async function POST(req: Request) {
 function isValidUUID(uuid: string) {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
-} 
+}
