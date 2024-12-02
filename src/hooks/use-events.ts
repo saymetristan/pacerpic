@@ -27,37 +27,31 @@ interface Event {
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const { data: eventsData, error } = await supabase
-        .from('events')
-        .select(`
-          id,
-          name,
-          date,
-          images_count,
-          images (
-            compressed_url
-          )
-        `)
-        .order('date', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('date', { ascending: true });
 
-      if (!error && eventsData) {
-        const eventsWithFullUrls = eventsData.map((event: any) => ({
-          ...event,
-          images: event.images?.map((img: any) => ({
-            ...img,
-            compressed_url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${img.compressed_url}`
-          }))
-        }));
-        setEvents(eventsWithFullUrls);
+        if (error) throw error;
+
+        console.log('Eventos obtenidos:', data); // Para debug
+
+        setEvents(data || []);
+      } catch (err) {
+        console.error('Error al obtener eventos:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchEvents();
   }, []);
 
-  return { events, loading };
+  return { events, loading, error };
 }
