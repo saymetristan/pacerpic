@@ -67,7 +67,9 @@ export function SearchForm() {
                 <div className="flex flex-col space-y-1">
                   <span className="font-medium">{event.name}</span>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{format(new Date(event.date), "d MMM yyyy", { locale: es })}</span>
+                    <span>
+                      {event.date ? format(new Date(event.date + 'T00:00:00'), "d MMM yyyy", { locale: es }) : ''}
+                    </span>
                     {event.images_count > 0 && (
                       <div className="flex items-center gap-1 text-[#EC6533]">
                         <Camera className="h-3 w-3" />
