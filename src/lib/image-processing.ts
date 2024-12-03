@@ -67,14 +67,14 @@ export async function processImage(
 
     // 1. Comprimir imagen
     const compressedImage = await sharp(file)
-      .resize(500, 500, {
+      .resize(1300, 1300, {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 80 });
+      .jpeg({ quality: 100 });
 
-    // Obtener el buffer de la imagen original para OpenAI
-    const base64Image = file.toString('base64');
+    // Obtener el buffer de la imagen comprimida para OpenAI
+    const base64Image = (await compressedImage.toBuffer()).toString('base64');
 
     // Descargar la marca de agua
     const watermarkResponse = await fetch(WATERMARK_URL);
@@ -82,7 +82,7 @@ export async function processImage(
 
     // Aplicar marca de agua
     const watermarkedImage = await sharp(file)
-      .resize(1000, 1000, {
+      .resize(1300, 1300, {
         fit: 'inside',
         withoutEnlargement: true
       })
