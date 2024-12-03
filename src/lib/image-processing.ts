@@ -74,11 +74,16 @@ export async function processImage(
     const compressedBuffer = await compressedImage.toBuffer();
 
     // 2. Añadir marca de agua a una copia de la imagen comprimida
-    const watermarkedImage = await sharp(compressedBuffer).composite([{
-      input: process.cwd() + '/public/watermark.png',
-      gravity: 'center',
-      opacity: 0.5
-    }]);
+    const watermarkedImage = await sharp(compressedBuffer)
+      .resize(1200, null, { 
+        fit: 'inside',
+        withoutEnlargement: true 
+      })
+      .composite([{
+        input: process.cwd() + '/public/watermark.png',
+        gravity: 'center',
+        blend: 'over',
+      }]);
 
     // 3. Detectar dorsales con OpenAI usando la imagen comprimida
     const base64Image = compressedBuffer.toString('base64');
@@ -118,7 +123,12 @@ export async function processImage(
 
     console.log('Respuesta de OpenAI:', response);
 
-    const { dorsal_number: dorsals } = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error('No se recibió respuesta de OpenAI');
+    }
+    
+    const { dorsal_number: dorsals }: { dorsal_number: number[] } = JSON.parse(content);
     console.log('Dorsales detectados:', dorsals);
 
     // 4. Guardar imágenes en Supabase Storage
@@ -173,10 +183,10 @@ export async function processImage(
     console.log('Referencia de imagen guardada en la base de datos:', image);
 
     // 6. Insertar dorsales detectados
-    const dorsalInserts = dorsals.map(dorsal => ({
+    const dorsalInserts = dorsals.map((dorsal: number) => ({
       image_id: image.id,
       dorsal_number: dorsal.toString(),
-      confidence: 1.0 // Por ahora usamos confianza máxima ya que GPT-4 no nos da este valor
+      confidence: 1.0
     }));
 
     if (dorsalInserts.length > 0) {

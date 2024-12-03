@@ -88,12 +88,12 @@ function StatCard({ label, value, className }: {
   );
 }
 
-function getVariantByStatus(status: string) {
+function getVariantByStatus(status: string): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case 'processed':
-      return 'success';
-    case 'processing':
       return 'secondary';
+    case 'processing':
+      return 'default';
     case 'error':
       return 'destructive';
     default:

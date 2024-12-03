@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,7 +19,7 @@ interface Image {
   // otros campos que pueda tener la imagen
 }
 
-export default function SearchResults() {
+function SearchContent() {
   const { theme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -250,5 +250,13 @@ export default function SearchResults() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchResults() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 } 

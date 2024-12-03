@@ -1,23 +1,23 @@
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export const eventsService = {
   async create(data: { name: string; date: string; location: string; organizer_id: string }) {
-    return db.from('events').insert(data).select().single();
+    return supabase.from('events').insert(data).select().single();
   },
 
   async getAll() {
-    return db.from('events').select('*');
+    return supabase.from('events').select('*');
   },
 
   async getById(id: string) {
-    return db.from('events').select('*').eq('id', id).single();
+    return supabase.from('events').select('*').eq('id', id).single();
   },
 
   async update(id: string, data: Partial<{ name: string; date: string; location: string }>) {
-    return db.from('events').update(data).eq('id', id);
+    return supabase.from('events').update(data).eq('id', id);
   },
 
   async delete(id: string) {
-    return db.from('events').delete().eq('id', id);
+    return supabase.from('events').delete().eq('id', id);
   }
 }; 

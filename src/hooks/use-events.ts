@@ -39,12 +39,10 @@ export function useEvents() {
 
         if (error) throw error;
 
-        console.log('Eventos obtenidos:', data); // Para debug
-
         setEvents(data || []);
       } catch (err) {
         console.error('Error al obtener eventos:', err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setLoading(false);
       }

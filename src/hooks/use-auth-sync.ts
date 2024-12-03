@@ -1,7 +1,7 @@
 "use client";
 
-import { useUser } from '@auth0/nextjs-auth0/client';
 import { useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export function useAuthSync() {
@@ -12,7 +12,6 @@ export function useAuthSync() {
     async function syncUser() {
       if (!isLoading && user) {
         try {
-          // Primero verificar si el usuario ya existe
           const { data: existingUser, error: selectError } = await supabase
             .from('users')
             .select('*')
@@ -25,7 +24,6 @@ export function useAuthSync() {
           }
 
           if (!existingUser) {
-            console.log('Creando nuevo usuario en Supabase...');
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
@@ -43,11 +41,12 @@ export function useAuthSync() {
             }
           }
 
+          const response = await fetch('/api/auth/session');
+          const session = await response.json();
+          
           const { error: sessionError } = await supabase.auth.setSession({
-            access_token: user.accessToken as string,
-            refresh_token: user.refreshToken || '',
-            provider_token: user.sub,
-            expires_in: 3600
+            access_token: session.accessToken,
+            refresh_token: ''
           });
 
           if (sessionError) {
@@ -60,7 +59,5 @@ export function useAuthSync() {
     }
 
     syncUser();
-  }, [user, isLoading, supabase]);
-
-  return { user, isLoading };
+  }, [user, isLoading, supabase.auth, supabase]);
 } 
