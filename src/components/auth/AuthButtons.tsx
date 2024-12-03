@@ -34,7 +34,7 @@ export function AuthButtons({ isScrolled }: AuthButtonsProps) {
             }`}
             asChild
           >
-            <a href="/api/auth/logout">Cerrar Sesión</a>
+            <a href={`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/logout`}>Cerrar Sesión</a>
           </Button>
         </>
       ) : (
@@ -48,7 +48,7 @@ export function AuthButtons({ isScrolled }: AuthButtonsProps) {
             }`}
             asChild
           >
-            <a href="/api/auth/login">Iniciar Sesión</a>
+            <a href={`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/login`}>Iniciar Sesión</a>
           </Button>
           
           <Button
