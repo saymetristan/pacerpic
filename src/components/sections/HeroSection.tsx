@@ -12,7 +12,7 @@ export function HeroSection() {
         transition={{ duration: 0.8 }}
         className="text-5xl md:text-7xl font-bold mb-6"
       >
-        Vive Cada Paso, Captura Cada Logro
+        Vive Cada Paso,<br />Captura Cada Logro
       </motion.h1>
       
       <motion.p
