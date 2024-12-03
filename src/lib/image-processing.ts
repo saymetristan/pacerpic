@@ -6,6 +6,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Usar URL de Supabase para la marca de agua
+const WATERMARK_URL = `https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/watermark.png`;
+
 export async function processImage(
   file: Buffer, 
   fileName: string, 
@@ -73,17 +76,23 @@ export async function processImage(
     // Obtener el buffer de la imagen comprimida para OpenAI
     const compressedBuffer = await compressedImage.toBuffer();
 
-    // 2. Añadir marca de agua a una copia de la imagen comprimida
-    const watermarkedImage = await sharp(compressedBuffer)
-      .resize(1200, null, { 
+    // Descargar la marca de agua
+    const watermarkResponse = await fetch(WATERMARK_URL);
+    const watermarkBuffer = await watermarkResponse.arrayBuffer();
+
+    // Aplicar marca de agua
+    const watermarkedImage = await sharp(file)
+      .resize(1000, 1000, {
         fit: 'inside',
-        withoutEnlargement: true 
+        withoutEnlargement: true
       })
-      .composite([{
-        input: process.cwd() + '/public/watermark.png',
-        gravity: 'center',
-        blend: 'over',
-      }]);
+      .composite([
+        {
+          input: Buffer.from(watermarkBuffer),
+          gravity: 'center',
+          blend: 'over'
+        }
+      ]);
 
     // 3. Detectar dorsales con OpenAI usando la imagen comprimida
     const base64Image = compressedBuffer.toString('base64');
