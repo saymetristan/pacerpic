@@ -73,8 +73,8 @@ export async function processImage(
       })
       .jpeg({ quality: 80 });
 
-    // Obtener el buffer de la imagen comprimida para OpenAI
-    const compressedBuffer = await compressedImage.toBuffer();
+    // Obtener el buffer de la imagen original para OpenAI
+    const base64Image = file.toString('base64');
 
     // Descargar la marca de agua
     const watermarkResponse = await fetch(WATERMARK_URL);
@@ -94,8 +94,7 @@ export async function processImage(
         }
       ]);
 
-    // 3. Detectar dorsales con OpenAI usando la imagen comprimida
-    const base64Image = compressedBuffer.toString('base64');
+    // 3. Detectar dorsales con OpenAI usando la imagen original
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -104,7 +103,33 @@ export async function processImage(
           "content": [
             {
               "type": "text",
-              "text": "Analiza la imagen proporcionada y determina qué números de dorsal se pueden ver. Proporciona la respuesta de forma estructurada.\n\n# Output Format\n\nEntregue la respuesta en formato JSON, incluyendo exclusivamente los números de dorsal visibles.\n\n```json\n{\n  \"dorsal_number\": [123, 456, 789]  // Reemplace estos números de ejemplo con los dorsales que detecte en la imagen.\n}\n```\n\n# Notes\n\n- Solamente deben incluirse números de dorsal visibles y claramente legibles.\n- Si no se detectan dorsales en la imagen, la respuesta debe ser un array vacío:\n\n```json\n{\n  \"dorsal_number\": []\n}\n```"
+              "text": `Analiza la imagen proporcionada para identificar y listar los números de dorsal visibles.
+
+Asegúrate de reconocer los números de dorsal que sean completos, completamente visibles y claramente legibles. Si se encuentra algún dorsal obstruido o no completo, no debe incluirse en la respuesta.
+
+# Output Format
+
+Presente los números de dorsal detectados en un formato JSON, siguiendo la estructura:
+
+\`\`\`json
+{
+  "dorsal_number": [NUMEROS_DE_DORSAL]
+}
+\`\`\`
+
+- \`NUMEROS_DE_DORSAL\`: una lista de números de dorsal visibles que has identificado. Reemplace este marcador de posición con los números reales detectados.
+- Si no se detectan dorsales, utilice un array vacío como en el siguiente ejemplo:
+
+\`\`\`json
+{
+  "dorsal_number": []
+}
+\`\`\`
+
+# Notes
+
+- Sólo se deben incluir números que sean completos y claramente legibles.
+- Si hay dificultad para identificar los dorsales debido a obstrucciones o calidad de imagen, no los incluya en la lista.`
             }
           ]
         },
