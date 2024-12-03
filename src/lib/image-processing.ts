@@ -96,7 +96,7 @@ export async function processImage(
 
     // 3. Detectar dorsales con OpenAI usando la imagen original
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           "role": "system",
