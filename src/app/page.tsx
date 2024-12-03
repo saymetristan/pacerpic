@@ -30,6 +30,8 @@ export default function Home() {
               sizes="100vw"
               priority
               quality={90}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..."
             />
           </div>
           <div className="relative z-10 h-full flex items-center justify-center">
