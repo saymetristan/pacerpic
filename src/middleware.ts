@@ -6,10 +6,12 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
   const res = NextResponse.next();
   const session = await getSession(req, res);
   
-  // Proteger rutas de admin y upload
+  // Asegurarse de que la URL base sea correcta
+  const baseUrl = process.env.AUTH0_BASE_URL || 'https://pacerpic.com';
+  
   if (req.nextUrl.pathname.startsWith('/admin') || req.nextUrl.pathname.startsWith('/api/images/upload')) {
     if (!session?.user) {
-      return NextResponse.redirect(new URL('/api/auth/login', req.url));
+      return NextResponse.redirect(new URL('/api/auth/login', baseUrl));
     }
   }
 
