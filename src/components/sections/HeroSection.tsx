@@ -12,7 +12,7 @@ export function HeroSection() {
         transition={{ duration: 0.8 }}
         className="text-5xl md:text-7xl font-bold mb-6"
       >
-        Captura tu momento de gloria
+        Vive Cada Paso, Captura Cada Logro
       </motion.h1>
       
       <motion.p
@@ -21,7 +21,7 @@ export function HeroSection() {
         transition={{ duration: 0.8, delay: 0.2 }}
         className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto"
       >
-        Encuentra tus fotos deportivas al instante. Sin registro, sin complicaciones.
+        Tus momentos deportivos al alcance de un clic. Encuentra y comparte tus fotos sin complicaciones ni registros.
       </motion.p>
       
       <SearchForm />
