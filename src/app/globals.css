@@ -10,6 +10,26 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .masonry {
+    column-count: 1;
+    column-gap: 1.5rem;
+  }
+  
+  @screen md {
+    .masonry {
+      column-count: 2;
+    }
+  }
+  
+  @screen lg {
+    .masonry {
+      column-count: 3;
+    }
+  }
+  
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
 }
 
 @layer base {

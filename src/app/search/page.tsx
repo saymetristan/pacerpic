@@ -185,27 +185,31 @@ function SearchContent() {
                   {event?.name} | Dorsal {dorsal}
                 </h1>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                   {paginatedImages.map((image) => (
                     <div 
                       key={image.id} 
-                      className="cursor-pointer relative group"
+                      className="cursor-pointer relative group break-inside-avoid"
                     >
                       <MagicCard
                         className="relative overflow-hidden rounded-lg"
                         gradientColor="#EC6533"
                       >
-                        <Image
-                          src={image.original_url}
-                          alt={`Dorsal ${searchParams.get("dorsal")}`}
-                          width={400}
-                          height={300}
-                          className="rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => {
-                            const img = e.target as HTMLImageElement;
-                            img.src = '/placeholder-image.jpg';
-                          }}
-                        />
+                        <div className="relative w-full">
+                          <div className="relative pb-[75%]">
+                            <Image
+                              src={image.original_url}
+                              alt={`Dorsal ${searchParams.get("dorsal")}`}
+                              fill
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                img.src = '/placeholder-image.jpg';
+                              }}
+                            />
+                          </div>
+                        </div>
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                           <Button
                             variant="secondary"
