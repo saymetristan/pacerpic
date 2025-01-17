@@ -36,12 +36,19 @@ export function useGallery() {
         .select(`
           *,
           event:events(name, date, location),
-          image_dorsals(dorsal_number)
+          image_dorsals(dorsal_number, confidence)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setImages(data || []);
+      
+      // Transformar los datos para que coincidan con la interfaz
+      const transformedData: GalleryImage[] = (data || []).map(img => ({
+        ...img,
+        image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : []
+      }));
+      
+      setImages(transformedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
