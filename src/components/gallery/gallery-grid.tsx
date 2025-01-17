@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ImageDialog } from "@/components/gallery/image-dialog";
 import { formatDate } from "@/lib/utils";
 import { Eye, Download, MoreVertical, Tag } from "lucide-react";
+import { useGallery, type GalleryImage } from "@/hooks/use-gallery";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,43 +16,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const images = [
-  {
-    id: 1,
-    url: "https://images.unsplash.com/photo-1513593771513-7b58b6c4af38",
-    event: "Maratón de Madrid 2024",
-    date: "2024-04-15",
-    tags: ["Llegada", "Individual"],
-    sales: 5,
-  },
-  {
-    id: 2,
-    url: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5",
-    event: "Trail Sierra Norte",
-    date: "2024-03-20",
-    tags: ["Paisaje", "Grupo"],
-    sales: 3,
-  },
-  {
-    id: 3,
-    url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211",
-    event: "San Silvestre Vallecana",
-    date: "2023-12-31",
-    tags: ["Salida", "Grupo"],
-    sales: 8,
-  },
-  {
-    id: 4,
-    url: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8",
-    event: "10K Valencia",
-    date: "2024-02-15",
-    tags: ["Avituallamiento"],
-    sales: 2,
-  },
-];
-
 export function GalleryGrid() {
-  const [selectedImage, setSelectedImage] = useState<typeof images[0] | null>(null);
+  const { images, loading } = useGallery();
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+
+  if (loading) {
+    return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[...Array(6)].map((_, i) => (
+        <Card key={i} className="animate-pulse">
+          <div className="aspect-[4/3] bg-muted" />
+          <div className="p-4 space-y-2">
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-3 bg-muted rounded w-1/2" />
+          </div>
+        </Card>
+      ))}
+    </div>;
+  }
 
   return (
     <>
@@ -60,8 +41,8 @@ export function GalleryGrid() {
           <Card key={image.id} className="overflow-hidden">
             <div className="relative aspect-[4/3]">
               <Image
-                src={image.url}
-                alt={image.event}
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/compressed/${image.compressed_url}`}
+                alt={image.event?.name || ""}
                 fill
                 className="object-cover"
               />
@@ -81,10 +62,17 @@ export function GalleryGrid() {
             <div className="p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-medium">{image.event}</h3>
+                  <h3 className="font-medium">{image.event?.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(image.date)}
+                    {formatDate(image.event?.date || '')}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {image.image_dorsals.map((dorsal, idx) => (
+                      <Badge key={idx} variant="secondary">
+                        #{dorsal.dorsal_number}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -107,25 +95,17 @@ export function GalleryGrid() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {image.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {image.sales} ventas
-              </p>
             </div>
           </Card>
         ))}
       </div>
 
-      <ImageDialog
-        image={selectedImage}
-        onClose={() => setSelectedImage(null)}
-      />
+      {selectedImage && (
+        <ImageDialog
+          image={selectedImage}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
     </>
   );
 }
