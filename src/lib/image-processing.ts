@@ -74,6 +74,14 @@ export async function processImage(
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
+    // Versión reducida para OpenAI (sin marco)
+    const compressedImage = await sharp(file)
+      .resize(1300, 1300, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80 });
+
     // Aplicar marco a imagen original
     const watermarkedImage = await sharp(file)
       .composite([
@@ -83,14 +91,6 @@ export async function processImage(
           blend: 'over'
         }
       ]);
-
-    // Versión reducida para OpenAI (sin marco)
-    const compressedImage = await sharp(file)
-      .resize(1300, 1300, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 80 });
 
     // Obtener el buffer de la imagen comprimida para OpenAI
     const base64Image = (await compressedImage.toBuffer()).toString('base64');
@@ -171,12 +171,12 @@ Presente los números de dorsal detectados en un formato JSON, siguiendo la estr
     const compressedPath = `compressed/${eventId}/${fileName}`;
     console.log('Rutas de almacenamiento:', { originalPath, compressedPath });
 
-    // Subir imagen original
+    // Subir imagen original (CON marco)
     const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, file, {
+      .upload(originalPath, await watermarkedImage.toBuffer(), {
         cacheControl: '3600',
-        upsert: true  // Cambiado a true para sobrescribir si existe
+        upsert: true
       });
 
     if (originalError) {
@@ -186,10 +186,10 @@ Presente los números de dorsal detectados en un formato JSON, siguiendo la estr
 
     console.log('Respuesta de subida original:', originalData);
 
-    // Subir imagen comprimida
+    // Subir imagen comprimida (SIN marco)
     const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, await watermarkedImage.toBuffer(), {
+      .upload(compressedPath, await compressedImage.toBuffer(), {
         cacheControl: '3600',
         upsert: true
       });

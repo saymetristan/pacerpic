@@ -29,7 +29,7 @@ export function useImages() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('eventId', eventId);
-      formData.append('photographerId', user.user_id);
+      formData.append('photographerId', user.sub);
 
       const response = await axios.post('/api/images/upload', formData, {
         onUploadProgress: (progressEvent) => {
