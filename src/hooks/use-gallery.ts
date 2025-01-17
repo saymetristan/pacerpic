@@ -12,7 +12,7 @@ export interface GalleryImage {
   compressed_url: string;
   status: string | null;
   created_at: string;
-  tags: string[];
+  tags: string[] | null;
   event: {
     name: string;
     date: string;
@@ -45,60 +45,49 @@ interface SupabaseImage {
   }[] | null;
 }
 
-export function useGallery() {
+export function useGallery(userId?: string) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchImages = async () => {
-    try {
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!userId) return;
+      
       const { data, error } = await supabase
         .from('images')
         .select(`
-          *,
+          id,
+          event_id,
+          photographer_id,
+          original_url,
+          compressed_url,
+          status,
+          created_at,
+          tags,
           event:events(name, date, location),
-          image_dorsals(dorsal_number, confidence)
+          image_dorsals!images_image_dorsals_fkey(dorsal_number, confidence)
         `)
-        .order('created_at', { ascending: false }) as { 
-          data: SupabaseImage[] | null, 
-          error: PostgrestError | null 
-        };
+        .eq('photographer_id', userId)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      // Transformar los datos para que coincidan con la interfaz
-      const transformedData: GalleryImage[] = (data || []).map((img: SupabaseImage) => ({
+      if (error) {
+        console.error('Error fetching images:', error);
+        return;
+      }
+
+      const mappedImages: GalleryImage[] = ((data || []) as SupabaseImage[]).map(img => ({
         ...img,
+        tags: img.tags || [],
         image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : [],
-        tags: img.tags || []
+        event: img.event ? { ...img.event, location: img.event.location || null } : null
       }));
-      
-      setImages(transformedData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    } finally {
+
+      setImages(mappedImages);
       setLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
     fetchImages();
-  }, []);
+  }, [userId]);
 
-  const filteredImages = images.filter(image => 
-    image.event?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    image.image_dorsals.some(dorsal => 
-      dorsal.dorsal_number.includes(searchQuery)
-    )
-  );
-
-  return {
-    images: filteredImages,
-    loading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    refreshImages: fetchImages
-  };
+  return { images, loading };
 } 

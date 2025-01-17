@@ -1,5 +1,6 @@
 "use client";
 
+import { useUser } from "@auth0/nextjs-auth0/client";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,8 @@ import {
 import { useEvents } from "@/hooks/use-events";
 
 export function UploadHeader({ onEventChange }: { onEventChange: (eventId: string) => void }) {
-  const { events, loading } = useEvents();
+  const { user } = useUser();
+  const { events, loading } = useEvents(user?.sub || undefined);
 
   return (
     <div className="flex items-center justify-between">

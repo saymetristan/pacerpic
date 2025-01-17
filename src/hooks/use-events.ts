@@ -24,18 +24,20 @@ interface Event {
   images: Image[];
 }
 
-export function useEvents() {
+export function useEvents(userId?: string) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
+      if (!userId) return;
       try {
         const { data, error } = await supabase
           .from('events')
           .select('*')
-          .order('date', { ascending: true });
+          .eq('organizer_id', userId)
+          .order('date', { ascending: false });
 
         if (error) throw error;
 
@@ -49,7 +51,7 @@ export function useEvents() {
     };
 
     fetchEvents();
-  }, []);
+  }, [userId]);
 
   return { events, loading, error };
 }

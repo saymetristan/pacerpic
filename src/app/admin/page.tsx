@@ -11,12 +11,14 @@ async function getDashboardStats() {
   const { data: events } = await supabase
     .from('events')
     .select('*')
+    .eq('organizer_id', user?.sub)
     .order('created_at', { ascending: false })
     .limit(3);
 
   const { count: totalEvents } = await supabase
     .from('events')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .eq('organizer_id', user?.sub);
 
   const { count: totalPhotographers } = await supabase
     .from('events')
@@ -26,7 +28,8 @@ async function getDashboardStats() {
 
   const { count: totalImages } = await supabase
     .from('images')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .eq('photographer_id', user?.sub);
 
   // Eventos este mes
   const startOfMonth = new Date();
