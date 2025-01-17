@@ -7,7 +7,8 @@ const openai = new OpenAI({
 });
 
 // Usar URL de Supabase para la marca de agua
-const WATERMARK_URL = `https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/watermark.png`;
+const WATERMARK_VERTICAL = `https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/vertical-juntos.png`;
+const WATERMARK_HORIZONTAL = `https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/horizontal-juntos.png`;
 
 export async function processImage(
   file: Buffer, 
@@ -65,27 +66,16 @@ export async function processImage(
 
     console.log('Iniciando procesamiento de imagen:', { fileName, eventId, photographerId });
 
-    // 1. Comprimir imagen
-    const compressedImage = await sharp(file)
-      .resize(1300, 1300, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 100 });
-
-    // Obtener el buffer de la imagen comprimida para OpenAI
-    const base64Image = (await compressedImage.toBuffer()).toString('base64');
-
-    // Descargar la marca de agua
-    const watermarkResponse = await fetch(WATERMARK_URL);
+    // Obtener dimensiones de la imagen original
+    const metadata = await sharp(file).metadata();
+    const isVertical = (metadata.height || 0) > (metadata.width || 0);
+    
+    // Descargar el marco según orientación
+    const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
-    // Aplicar marca de agua
+    // Aplicar marco a imagen original
     const watermarkedImage = await sharp(file)
-      .resize(1300, 1300, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
       .composite([
         {
           input: Buffer.from(watermarkBuffer),
@@ -93,6 +83,17 @@ export async function processImage(
           blend: 'over'
         }
       ]);
+
+    // Versión reducida para OpenAI (sin marco)
+    const compressedImage = await sharp(file)
+      .resize(1300, 1300, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80 });
+
+    // Obtener el buffer de la imagen comprimida para OpenAI
+    const base64Image = (await compressedImage.toBuffer()).toString('base64');
 
     // 3. Detectar dorsales con OpenAI usando la imagen original
     const response = await openai.chat.completions.create({
