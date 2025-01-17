@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import Masonry from 'react-masonry-css';
 
 interface EventImage {
   id: string;
@@ -95,6 +96,13 @@ export default function EventGalleryPage() {
   const paginatedImages = images.slice(0, page * ITEMS_PER_PAGE);
   const hasMore = images.length > paginatedImages.length;
 
+  const breakpointColumns = {
+    default: 4,
+    1100: 3,
+    700: 2,
+    500: 1
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -152,26 +160,29 @@ export default function EventGalleryPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <Masonry
+              breakpointCols={breakpointColumns}
+              className="flex w-auto -ml-6"
+              columnClassName="pl-6 bg-clip-padding"
+            >
               {paginatedImages.map((image) => (
                 <div 
                   key={image.id}
-                  className="cursor-pointer relative group break-inside-avoid"
+                  className="mb-6 cursor-pointer relative group"
                 >
                   <MagicCard
                     className="relative overflow-hidden rounded-lg"
                     gradientColor="#EC6533"
                   >
                     <div className="relative w-full">
-                      <div className="relative pb-[75%]">
-                        <Image
-                          src={image.original_url}
-                          alt="Foto del evento"
-                          fill
-                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                        />
-                      </div>
+                      <Image
+                        src={image.original_url}
+                        alt="Foto del evento"
+                        width={500}
+                        height={500}
+                        className="w-full h-auto"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                      />
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <Button
@@ -275,7 +286,7 @@ export default function EventGalleryPage() {
                   </MagicCard>
                 </div>
               ))}
-            </div>
+            </Masonry>
 
             {hasMore && (
               <div className="mt-8 text-center">

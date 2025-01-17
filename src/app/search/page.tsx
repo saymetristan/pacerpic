@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import Masonry from 'react-masonry-css';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -114,6 +115,13 @@ function SearchContent() {
   const paginatedImages = images.slice(0, page * ITEMS_PER_PAGE);
   const hasMore = images.length > paginatedImages.length;
 
+  const breakpointColumns = {
+    default: 4,
+    1100: 3,
+    700: 2,
+    500: 1
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -181,138 +189,134 @@ function SearchContent() {
           <>
             {images.length > 0 ? (
               <>
-                <h1 className="text-3xl font-bold mb-8 text-[#1A3068] dark:text-white">
-                  {event?.name} | Dorsal {dorsal}
-                </h1>
-
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                <Masonry
+                  breakpointCols={breakpointColumns}
+                  className="flex w-auto -ml-6"
+                  columnClassName="pl-6 bg-clip-padding"
+                >
                   {paginatedImages.map((image) => (
                     <div 
-                      key={image.id} 
-                      className="cursor-pointer relative group break-inside-avoid"
+                      key={image.id}
+                      className="mb-6 cursor-pointer relative group"
+                      onClick={() => setSelectedImage(image)}
                     >
                       <MagicCard
                         className="relative overflow-hidden rounded-lg"
                         gradientColor="#EC6533"
                       >
                         <div className="relative w-full">
-                          <div className="relative pb-[75%]">
-                            <Image
-                              src={image.original_url}
-                              alt={`Dorsal ${searchParams.get("dorsal")}`}
-                              fill
-                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              onError={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                img.src = '/placeholder-image.jpg';
+                          <Image
+                            src={image.original_url}
+                            alt={`Dorsal ${searchParams.get("dorsal")}`}
+                            width={500}
+                            height={500}
+                            className="w-full h-auto"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="bg-white/20 hover:bg-white/40"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await fetch(image.original_url);
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = `dorsal-${searchParams.get("dorsal")}-${image.id}.jpg`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  link.remove();
+                                  window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                  console.error('Error al descargar:', error);
+                                }
                               }}
-                            />
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="bg-white/20 hover:bg-white/40"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                const response = await fetch(image.original_url);
-                                const blob = await response.blob();
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `dorsal-${searchParams.get("dorsal")}-${image.id}.jpg`;
-                                document.body.appendChild(link);
-                                link.click();
-                                link.remove();
-                                window.URL.revokeObjectURL(url);
-                              } catch (error) {
-                                console.error('Error al descargar:', error);
-                              }
-                            }}
-                          >
-                            <Download className="h-4 w-4 text-white" />
-                          </Button>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="secondary"
-                                size="icon"
-                                className="bg-white/20 hover:bg-white/40"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (navigator.share) {
-                                    navigator.share({
-                                      title: `Dorsal ${searchParams.get("dorsal")}`,
-                                      text: `Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}`,
-                                      url: image.original_url
-                                    });
-                                  }
-                                }}
-                              >
-                                <Share className="h-4 w-4 text-white" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            {!navigator.share && (
-                              <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(image.original_url);
-                                    toast({
-                                      description: "URL copiada al portapapeles",
-                                    });
+                            >
+                              <Download className="h-4 w-4 text-white" />
+                            </Button>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className="bg-white/20 hover:bg-white/40"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (navigator.share) {
+                                      navigator.share({
+                                        title: `Dorsal ${searchParams.get("dorsal")}`,
+                                        text: `Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}`,
+                                        url: image.original_url
+                                      });
+                                    }
                                   }}
                                 >
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Copiar enlace
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(image.original_url)}`, '_blank');
-                                  }}
-                                >
-                                  <FacebookIcon className="mr-2 h-4 w-4" />
-                                  Compartir en Facebook
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(image.original_url)}&text=${encodeURIComponent(`Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}`)}`, '_blank');
-                                  }}
-                                >
-                                  <TwitterIcon className="mr-2 h-4 w-4" />
-                                  Compartir en Twitter
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}: ${image.original_url}`)}`, '_blank');
-                                  }}
-                                >
-                                  <WhatsAppIcon />
-                                  Compartir en WhatsApp
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            )}
-                          </DropdownMenu>
+                                  <Share className="h-4 w-4 text-white" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              {!navigator.share && (
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(image.original_url);
+                                      toast({
+                                        description: "URL copiada al portapapeles",
+                                      });
+                                    }}
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copiar enlace
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(image.original_url)}`, '_blank');
+                                    }}
+                                  >
+                                    <FacebookIcon className="mr-2 h-4 w-4" />
+                                    Compartir en Facebook
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(image.original_url)}&text=${encodeURIComponent(`Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}`)}`, '_blank');
+                                    }}
+                                  >
+                                    <TwitterIcon className="mr-2 h-4 w-4" />
+                                    Compartir en Twitter
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del dorsal ${searchParams.get("dorsal")} en ${event?.name}: ${image.original_url}`)}`, '_blank');
+                                    }}
+                                  >
+                                    <WhatsAppIcon />
+                                    Compartir en WhatsApp
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              )}
+                            </DropdownMenu>
 
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="bg-white/20 hover:bg-white/40"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedImage(image);
-                            }}
-                          >
-                            <Maximize2 className="h-4 w-4 text-white" />
-                          </Button>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="bg-white/20 hover:bg-white/40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(image);
+                              }}
+                            >
+                              <Maximize2 className="h-4 w-4 text-white" />
+                            </Button>
+                          </div>
                         </div>
                       </MagicCard>
                     </div>
                   ))}
-                </div>
+                </Masonry>
 
                 {hasMore && (
                   <div className="mt-8 text-center">
@@ -471,7 +475,7 @@ function SearchContent() {
             className="relative w-full h-full flex items-center justify-center p-4"
             onClick={e => e.stopPropagation()}
           >
-            <div className="relative w-full max-w-6xl aspect-[4/3]">
+            <div className="relative w-full max-w-[90vw] h-[90vh]">
               <Image
                 src={selectedImage.original_url}
                 alt={`Dorsal ${searchParams.get("dorsal")}`}
