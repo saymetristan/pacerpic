@@ -3,32 +3,10 @@ import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!
 });
-
 const WATERMARK_VERTICAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/vertical-juntos.png';
 const WATERMARK_HORIZONTAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/horizontal-juntos.png';
-
-// Función auxiliar para comprimir imagen inicial
-async function compressInitialImage(file: Buffer) {
-  const metadata = await sharp(file).metadata();
-  const isLarge = (metadata.width || 0) > 2000 || (metadata.height || 0) > 2000;
-
-  return sharp(file)
-    .resize(isLarge ? 2000 : metadata.width, isLarge ? 2000 : metadata.height, {
-      fit: 'inside',
-      withoutEnlargement: true
-    })
-    .jpeg({
-      quality: 75,
-      mozjpeg: true,
-      chromaSubsampling: '4:2:0',
-      trellisQuantisation: true,
-      overshootDeringing: true,
-      optimizeScans: true,
-    })
-    .toBuffer();
-}
 
 export async function processImage(
   file: Buffer, 
@@ -49,13 +27,13 @@ export async function processImage(
       }
     );
 
-    const { data: user, error: roleError } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('users')
-      .select('role, id')
+      .select('role,id')
       .eq('auth0_id', photographerId)
       .single();
 
-    if (!user || roleError) {
+    if (!user || userError) {
       throw new Error('Error de autenticación');
     }
 
@@ -64,51 +42,15 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // Compresión inicial agresiva
-    const compressedOriginal = await compressInitialImage(file);
-    
-    // Obtén metadatos para determinar orientación
-    const metadata = await sharp(compressedOriginal).metadata();
-    const isVertical = (metadata.height || 0) > (metadata.width || 0);
-
-    // Versión más pequeña para OpenAI
-    const resizedForAI = await sharp(compressedOriginal)
-      .resize(600, 600, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 70 })
+    // 1. Generar copia 1300x1300 para OpenAI
+    const aiCopyBuffer = await sharp(file)
+      .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
       .toBuffer();
 
-    // Descarga y procesa el watermark
-    const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
-    const watermarkBuffer = await watermarkResponse.arrayBuffer();
-
-    // Redimensiona el watermark al tamaño de la imagen
-    const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
-      .resize(metadata.width, metadata.height, {
-        fit: 'fill'
-      })
-      .png()
-      .toBuffer();
-
-    // Versión comprimida con marca de agua
-    const watermarkedImage = await sharp(compressedOriginal)
-      .composite([
-        {
-          input: resizedWatermark,
-          gravity: 'center'
-        }
-      ])
-      .jpeg({ 
-        quality: 80,
-        mozjpeg: true,
-        chromaSubsampling: '4:2:0'
-      });
-
-    // Llamada a OpenAI con la imagen reducida
-    const base64Image = resizedForAI.toString('base64');
-    const response = await openai.chat.completions.create({
+    // 2. Procesar con OpenAI
+    const base64AI = aiCopyBuffer.toString('base64');
+    const aiResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
@@ -137,35 +79,51 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
           content: [
             {
               type: 'image_url',
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`
-              }
+              image_url: { url: `data:image/jpeg;base64,${base64AI}` }
             }
           ]
         }
       ],
       response_format: { type: 'json_object' },
       temperature: 1,
-      max_tokens: 2048,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0
+      max_tokens: 2048
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error('No se recibió respuesta de OpenAI');
+    const { dorsal_number: dorsals } = JSON.parse(aiResponse.choices[0].message.content || '{}') || {
+      dorsal_number: []
+    };
+
+    // 3. Comprimir imagen original a <5MB (ajustar calidad si quieres más control)
+    let compressedOriginal = await sharp(file)
+      .jpeg({ quality: 85, chromaSubsampling: '4:2:0', mozjpeg: true })
+      .toBuffer();
+    while (compressedOriginal.byteLength > 5 * 1024 * 1024) {
+      compressedOriginal = await sharp(compressedOriginal)
+        .jpeg({ quality: 75, chromaSubsampling: '4:2:0', mozjpeg: true })
+        .toBuffer();
     }
 
-    const { dorsal_number: dorsals } = JSON.parse(content);
+    // 4. Detectar orientación y aplicar watermark
+    const meta = await sharp(compressedOriginal).metadata();
+    const isVertical = (meta.height || 0) > (meta.width || 0);
+    const watermarkUrl = isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL;
+    const wmResponse = await fetch(watermarkUrl);
+    const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
+    const resizedWM = await sharp(watermarkBuf)
+      .resize(meta.width, meta.height, { fit: 'fill' })
+      .png()
+      .toBuffer();
+    const finalImageWithWM = await sharp(compressedOriginal)
+      .composite([{ input: resizedWM, gravity: 'center' }])
+      .jpeg({ quality: 85, mozjpeg: true })
+      .toBuffer();
 
-    // Subimos imagen con watermark (original dimensions) a Supabase
+    // 5. Subir a buckets (ejemplo: bucket originals y compressed)
     const originalPath = `originals/${eventId}/${fileName}`;
     const compressedPath = `compressed/${eventId}/${fileName}`;
-    
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, compressedOriginal, {
+      .upload(originalPath, finalImageWithWM, {
         cacheControl: '3600',
         upsert: true
       });
@@ -173,10 +131,9 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       throw originalError;
     }
 
-    // Subimos la misma imagen con watermark al bucket compressed (puede ser la misma)
     const { error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, compressedOriginal, {
+      .upload(compressedPath, finalImageWithWM, {
         cacheControl: '3600',
         upsert: true
       });
@@ -184,8 +141,8 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       throw compressedError;
     }
 
-    // Insertamos la referencia en la base de datos
-    const { data: image, error: imageError } = await supabase
+    // 6. Registrar en BD
+    const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
@@ -196,27 +153,27 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       })
       .select()
       .single();
-    if (imageError) {
-      throw imageError;
+    if (insertError) {
+      throw insertError;
     }
 
-    // Asociamos los dorsales detectados
-    const dorsalInserts = dorsals.map((d: number) => ({
-      image_id: image.id,
+    // 7. Guardar dorsales detectados
+    const dorsalRecords = dorsals?.map((d: number) => ({
+      image_id: newImage.id,
       dorsal_number: d.toString(),
       confidence: 1.0
     }));
-    if (dorsalInserts.length > 0) {
+    if (dorsalRecords?.length) {
       const { error: dorsalError } = await supabase
         .from('image_dorsals')
-        .insert(dorsalInserts);
+        .insert(dorsalRecords);
       if (dorsalError) {
         throw dorsalError;
       }
     }
 
-    return { ...image, dorsals };
-  } catch (error) {
-    throw error;
+    return { ...newImage, dorsals };
+  } catch (err) {
+    throw err;
   }
 }
