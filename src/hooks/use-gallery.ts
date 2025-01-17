@@ -33,7 +33,6 @@ interface SupabaseImage {
   compressed_url: string;
   status: string | null;
   created_at: string;
-  tags: string[] | null;
   event: {
     name: string;
     date: string;
@@ -64,7 +63,6 @@ export function useGallery(userId?: string) {
           compressed_url,
           status,
           created_at,
-          tags,
           event:events(name, date, location),
           image_dorsals!images_image_dorsals_fkey(dorsal_number, confidence)
         `)
@@ -76,9 +74,9 @@ export function useGallery(userId?: string) {
         return;
       }
 
-      const mappedImages: GalleryImage[] = ((data || []) as SupabaseImage[]).map(img => ({
+      const mappedImages: GalleryImage[] = ((data || []) as unknown as SupabaseImage[]).map(img => ({
         ...img,
-        tags: img.tags || [],
+        tags: [],
         image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : [],
         event: img.event ? { ...img.event, location: img.event.location || null } : null
       }));
