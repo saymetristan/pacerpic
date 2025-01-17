@@ -13,60 +13,37 @@ import { formatDate } from "@/lib/utils";
 
 interface ImageDialogProps {
   image: {
-    id: number;
-    url: string;
-    event: string;
-    date: string;
-    tags: string[];
-    sales: number;
-  } | null;
+    id: string;
+    original_url: string;
+    compressed_url: string;
+    event?: {
+      name: string;
+      date: string;
+    } | null;
+    image_dorsals: {
+      dorsal_number: string;
+      confidence: number;
+    }[];
+  };
   onClose: () => void;
 }
 
 export function ImageDialog({ image, onClose }: ImageDialogProps) {
-  if (!image) return null;
-
   return (
-    <Dialog open={!!image} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{image.event}</DialogTitle>
-        </DialogHeader>
-        <div className="relative aspect-[4/3] mt-4">
-          <Image
-            src={image.url}
-            alt={image.event}
-            fill
-            className="object-cover rounded-lg"
-          />
-        </div>
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium mb-2">Detalles</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Fecha</p>
-                <p className="text-sm font-medium">{formatDate(image.date)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Ventas</p>
-                <p className="text-sm font-medium">{image.sales}</p>
-              </div>
-            </div>
-          </div>
-          <Separator />
-          <div>
-            <h4 className="text-sm font-medium mb-2">Etiquetas</h4>
-            <div className="flex flex-wrap gap-2">
-              {image.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div 
+      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div className="relative max-w-5xl w-full h-full flex items-center justify-center p-4">
+        <Image
+          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/original/${image.original_url}`}
+          alt={image.event?.name || ""}
+          width={1200}
+          height={800}
+          className="max-h-[90vh] w-auto object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    </div>
   );
 }
