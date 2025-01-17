@@ -16,14 +16,14 @@ export function useAuthSync() {
           const { data: existingUser, error: selectError } = await supabase
             .from('users')
             .select('*')
-            .eq('auth0_id', user.user_id)
+            .eq('auth0_id', user.sub)
             .single();
 
           if (selectError && selectError.code === 'PGRST116') {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
-                auth0_id: user.user_id,
+                auth0_id: user.sub,
                 role: (user.user_metadata as { role?: string })?.role || 'admin',
                 email: user.email,
                 name: user.name
