@@ -5,6 +5,8 @@ import { getSession } from '@auth0/nextjs-auth0';
 export async function POST(req: Request) {
   try {
     const session = await getSession();
+    console.log('Session:', session);
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -12,28 +14,36 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
-    const photographerId = formData.get('photographerId') as string;
+    const photographerId = session.user.sub;
 
-    if (!file || !eventId || !isValidUUID(eventId) || !photographerId) {
+    console.log('Upload params:', { 
+      fileExists: !!file, 
+      eventId, 
+      photographerId,
+      fileName: file?.name 
+    });
+
+    if (!file || !eventId || !photographerId) {
       return NextResponse.json(
-        { error: 'Archivo, eventId (UUID válido) y photographerId son requeridos' },
+        { error: 'Archivo, eventId y photographerId son requeridos' },
         { status: 400 }
       );
     }
 
-    const accessToken = session.accessToken;
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Token de acceso no encontrado' }, { status: 401 });
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageData = await processImage(buffer, file.name, eventId, photographerId, accessToken);
+    const imageData = await processImage(
+      buffer, 
+      file.name, 
+      eventId, 
+      photographerId,
+      session.accessToken || ''
+    );
 
     return NextResponse.json(imageData);
-  } catch (error) {
-    console.error('Error procesando imagen:', error);
+  } catch (error: any) {
+    console.error('Error detallado:', error);
     return NextResponse.json(
-      { error: 'Error procesando imagen' },
+      { error: error.message || 'Error procesando imagen' },
       { status: 500 }
     );
   }
