@@ -74,6 +74,13 @@ export async function processImage(
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
+    // Primero redimensionar el watermark al tamaño de la imagen original
+    const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
+      .resize(metadata.width || 0, metadata.height || 0, {
+        fit: 'fill'
+      })
+      .toBuffer();
+
     // Versión reducida para OpenAI (sin marco)
     const compressedImage = await sharp(file)
       .resize(1300, 1300, {
@@ -82,16 +89,11 @@ export async function processImage(
       })
       .jpeg({ quality: 80 });
 
-    // Aplicar marco a imagen original
+    // Luego aplicar el watermark redimensionado
     const watermarkedImage = await sharp(file)
       .composite([
         {
-          input: Buffer.from(watermarkBuffer),
-          raw: {
-            width: metadata.width || 0,
-            height: metadata.height || 0,
-            channels: 4
-          },
+          input: resizedWatermark,
           gravity: 'center',
           blend: 'over',
           tile: false,
