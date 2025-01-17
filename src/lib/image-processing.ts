@@ -74,21 +74,13 @@ export async function processImage(
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
-    // Primero redimensionar el watermark manteniendo proporciones
+    // Primero redimensionar el watermark al tamaño de la imagen original
     const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
       .resize(metadata.width || 0, metadata.height || 0, {
-        fit: 'contain',
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
+        fit: 'fill'
       })
+      .png({ quality: 80 })
       .toBuffer();
-
-    // Versión reducida para OpenAI (sin marco)
-    const compressedImage = await sharp(file)
-      .resize(1300, 1300, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 80 });
 
     // Luego aplicar el watermark redimensionado
     const watermarkedImage = await sharp(file)
@@ -98,10 +90,11 @@ export async function processImage(
           gravity: 'center',
           blend: 'over'
         }
-      ]);
+      ])
+      .jpeg({ quality: 85 });
 
     // Obtener el buffer de la imagen comprimida para OpenAI
-    const base64Image = (await compressedImage.toBuffer()).toString('base64');
+    const base64Image = (await watermarkedImage.toBuffer()).toString('base64');
 
     // 3. Detectar dorsales con OpenAI usando la imagen original
     const response = await openai.chat.completions.create({
@@ -197,7 +190,7 @@ Presente los números de dorsal detectados en un formato JSON, siguiendo la estr
     // Subir imagen comprimida (SIN marco)
     const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, await compressedImage.toBuffer(), {
+      .upload(compressedPath, await watermarkedImage.toBuffer(), {
         cacheControl: '3600',
         upsert: true
       });
