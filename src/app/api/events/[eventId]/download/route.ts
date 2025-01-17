@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import AdmZip from 'adm-zip';
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public';
 const CHUNK_SIZE = 10;
@@ -14,8 +15,8 @@ export async function GET(request: Request, { params }: { params: { eventId: str
       return new Response('No hay imágenes', { status: 404 });
     }
 
-    // Obtener todas las imágenes primero
-    const allImages = [];
+    const zip = new AdmZip();
+
     for (let offset = 0; offset < count; offset += CHUNK_SIZE) {
       const { data: images } = await supabase
         .from('images')
@@ -24,40 +25,24 @@ export async function GET(request: Request, { params }: { params: { eventId: str
         .range(offset, offset + CHUNK_SIZE - 1);
 
       if (!images?.length) break;
-      allImages.push(...images);
-    }
 
-    // Descargar todas las imágenes
-    const imageBuffers = await Promise.all(
-      allImages.map(async (image, index) => {
+      for (const image of images) {
         const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
         const response = await fetch(imageUrl);
-        if (!response.ok) return null;
-        const buffer = await response.arrayBuffer();
-        return {
-          buffer: Buffer.from(buffer),
-          name: `imagen-${index + 1}.jpg`
-        };
-      })
-    );
-
-    // Crear un único buffer con todas las imágenes
-    const totalSize = imageBuffers.reduce((size, img) => size + (img?.buffer.length || 0), 0);
-    const finalBuffer = Buffer.alloc(totalSize);
-    let offset = 0;
-
-    imageBuffers.forEach(img => {
-      if (img?.buffer) {
-        img.buffer.copy(finalBuffer, offset);
-        offset += img.buffer.length;
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          zip.addFile(`imagen-${offset + 1}.jpg`, Buffer.from(buffer));
+        }
       }
-    });
+    }
 
-    return new Response(finalBuffer, {
+    const zipBuffer = zip.toBuffer();
+
+    return new Response(zipBuffer, {
       headers: {
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`,
-        'Content-Length': finalBuffer.length.toString()
+        'Content-Length': zipBuffer.length.toString()
       }
     });
 
