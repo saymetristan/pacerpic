@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import DownloadButton from "@/components/DownloadButton";
 
 interface Event {
   id: string;
@@ -101,48 +102,7 @@ export function EventsTable() {
               </TableCell>
               <TableCell className="text-right">{event.image_count}</TableCell>
               <TableCell>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={downloading[event.id] !== undefined}
-                  onClick={async () => {
-                    try {
-                      setDownloading(prev => ({ ...prev, [event.id]: 0 }));
-                      const response = await fetch(`/api/events/${event.id}/download`);
-                      const reader = response.body?.getReader();
-                      if (!reader) return;
-
-                      const contentLength = +(response.headers.get('Content-Length') ?? 0);
-                      let receivedLength = 0;
-
-                      while(true) {
-                        const {done, value} = await reader.read();
-                        if (done) break;
-                        
-                        receivedLength += value.length;
-                        const progress = (receivedLength / contentLength) * 100;
-                        setDownloading(prev => ({ ...prev, [event.id]: progress }));
-                      }
-                    } catch (error) {
-                      console.error('Error al descargar:', error);
-                    } finally {
-                      setDownloading(prev => {
-                        const newState = { ...prev };
-                        delete newState[event.id];
-                        return newState;
-                      });
-                    }
-                  }}
-                >
-                  {downloading[event.id] !== undefined ? (
-                    <Progress value={downloading[event.id]} className="w-24" />
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Descargar todas
-                    </>
-                  )}
-                </Button>
+                <DownloadButton eventId={event.id} />
               </TableCell>
             </TableRow>
           ))}
