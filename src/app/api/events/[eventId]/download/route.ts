@@ -1,51 +1,62 @@
-import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import JSZip from 'jszip';
+import archiver from 'archiver';
+import { Readable } from 'stream';
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public';
+const CHUNK_SIZE = 100; // Procesar 100 imágenes a la vez
 
 export async function GET(
   request: Request,
   { params }: { params: { eventId: string } }
 ) {
-  try {
+  const encoder = new TextEncoder();
+  const stream = new TransformStream();
+  const writer = stream.writable.getWriter();
+  
+  const archive = archiver('zip', {
+    store: true // Sin compresión
+  });
+
+  // Convertir el stream de archiver a un formato que el navegador pueda leer
+  archive.on('data', async (chunk: Buffer) => {
+    await writer.write(chunk);
+  });
+
+  archive.on('end', async () => {
+    await writer.close();
+  });
+
+  // Iniciar el streaming de la respuesta
+  const response = new Response(stream.readable, {
+    headers: {
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`
+    }
+  });
+
+  // Procesar imágenes en chunks
+  let offset = 0;
+  while (true) {
     const { data: images } = await supabase
       .from('images')
       .select('compressed_url')
-      .eq('event_id', params.eventId);
+      .eq('event_id', params.eventId)
+      .range(offset, offset + CHUNK_SIZE - 1);
 
-    if (!images?.length) {
-      return new NextResponse('No hay imágenes', { status: 404 });
-    }
+    if (!images?.length) break;
 
-    const zip = new JSZip();
-    
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = `${STORAGE_URL}/compressed/${images[i].compressed_url}`;
+    for (const image of images) {
+      const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
       const response = await fetch(imageUrl);
-      
-      if (!response.ok) {
-        console.error(`Error descargando imagen ${i + 1}:`, response.statusText);
-        continue;
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        archive.append(Buffer.from(buffer), { name: `imagen-${offset + 1}.jpg` });
       }
-      
-      const arrayBuffer = await response.arrayBuffer();
-      zip.file(`imagen-${i + 1}.jpg`, arrayBuffer);
     }
 
-    const zipBlob = await zip.generateAsync({ 
-      type: 'blob',
-      compression: 'STORE'  // Sin compresión para evitar corrupción
-    });
-
-    return new NextResponse(zipBlob, {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`
-      }
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    return new NextResponse('Error interno', { status: 500 });
+    offset += CHUNK_SIZE;
   }
+
+  archive.finalize();
+  return response;
 } 
