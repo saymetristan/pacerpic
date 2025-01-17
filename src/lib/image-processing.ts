@@ -33,7 +33,7 @@ export async function processImage(
     const { data: user, error: roleError } = await supabase
       .from('users')
       .select('role, id')
-      .eq('auth0_id', photographerId)
+      .eq('auth0_id', `auth0|${photographerId}`)
       .single();
 
     console.log('User Check:', { user, roleError, photographerId });
