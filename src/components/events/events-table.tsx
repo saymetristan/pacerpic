@@ -20,7 +20,6 @@ interface Event {
   date: string;
   location: string | null;
   status?: 'active' | 'completed' | 'cancelled';
-  photographer_id: string | null;
   organizer_id: string | null;
   created_at: string;
   image_count: number;
@@ -43,7 +42,7 @@ export function EventsTable() {
             *,
             images:images(count)
           `)
-          .eq('photographer_id', user.sub)
+          .eq('organizer_id', user.sub)
           .order('date', { ascending: false });
 
         if (error) throw error;
