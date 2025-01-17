@@ -74,10 +74,11 @@ export async function processImage(
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
-    // Primero redimensionar el watermark al tamaño de la imagen original
+    // Primero redimensionar el watermark manteniendo proporciones
     const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
       .resize(metadata.width || 0, metadata.height || 0, {
-        fit: 'fill'
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .toBuffer();
 
@@ -95,16 +96,9 @@ export async function processImage(
         {
           input: resizedWatermark,
           gravity: 'center',
-          blend: 'over',
-          tile: false,
-          premultiplied: true
+          blend: 'over'
         }
-      ])
-      .resize({
-        width: metadata.width,
-        height: metadata.height,
-        fit: 'fill'
-      });
+      ]);
 
     // Obtener el buffer de la imagen comprimida para OpenAI
     const base64Image = (await compressedImage.toBuffer()).toString('base64');
