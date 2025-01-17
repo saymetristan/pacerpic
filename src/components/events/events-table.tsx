@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { supabase } from "@/lib/supabase";
 import {
   Table,
   TableBody,
@@ -8,59 +11,73 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { EventActions } from "@/components/events/event-actions";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
-const events = [
-  {
-    id: 1,
-    name: "Maratón de Madrid 2024",
-    date: "2024-04-15",
-    totalImages: 1250,
-    soldImages: 438,
-    revenue: 6570,
-    status: "active",
-    location: "Madrid, España",
-    organizerContact: "contacto@maratonmadrid.com",
-  },
-  {
-    id: 2,
-    name: "Trail Sierra Norte",
-    date: "2024-03-20",
-    totalImages: 850,
-    soldImages: 324,
-    revenue: 4860,
-    status: "active",
-    location: "Sierra Norte, España",
-    organizerContact: "contacto@trailsierranorte.com",
-  },
-  {
-    id: 3,
-    name: "San Silvestre Vallecana",
-    date: "2023-12-31",
-    totalImages: 2100,
-    soldImages: 892,
-    revenue: 13380,
-    status: "completed",
-    location: "Vallecas, España",
-    organizerContact: "contacto@sansilvestrevallecana.com",
-  },
-];
-
+interface Event {
+  id: string;
+  name: string;
+  date: string;
+  location: string | null;
+  status?: 'active' | 'completed' | 'cancelled';
+  photographer_id: string | null;
+  organizer_id: string | null;
+  created_at: string;
+  image_count: number;
+  images: { count: number; }[];
+}
 
 export function EventsTable() {
+  const { user } = useUser();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        if (!user?.sub) return;
+
+        const { data, error } = await supabase
+          .from('events')
+          .select(`
+            *,
+            images:images(count)
+          `)
+          .eq('photographer_id', user.sub)
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        const eventsWithCount = data.map(event => ({
+          ...event,
+          status: 'active' as const,
+          photographer_id: user?.sub || null,
+          image_count: event.images?.[0]?.count || 0
+        }));
+
+        setEvents(eventsWithCount);
+      } catch (err) {
+        console.error('Error al cargar eventos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.sub) {
+      fetchEvents();
+    }
+  }, [user?.sub]);
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Evento</TableHead>
+            <TableHead>Nombre</TableHead>
             <TableHead>Fecha</TableHead>
-            <TableHead className="text-right">Total Imágenes</TableHead>
-            <TableHead className="text-right">Imágenes Vendidas</TableHead>
-            <TableHead className="text-right">Ingresos</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-right">Fotos</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,14 +85,17 @@ export function EventsTable() {
             <TableRow key={event.id}>
               <TableCell className="font-medium">{event.name}</TableCell>
               <TableCell>{formatDate(event.date)}</TableCell>
-              <TableCell className="text-right">{event.totalImages}</TableCell>
-              <TableCell className="text-right">{event.soldImages}</TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(event.revenue)}
+              <TableCell>{event.location}</TableCell>
+              <TableCell>
+                <Badge variant={
+                  event.status === 'active' ? 'default' :
+                  event.status === 'completed' ? 'secondary' : 'destructive'
+                }>
+                  {event.status === 'active' ? 'Activo' :
+                   event.status === 'completed' ? 'Completado' : 'Cancelado'}
+                </Badge>
               </TableCell>
-              <TableCell className="text-right">
-                <EventActions event={event} />
-              </TableCell>
+              <TableCell className="text-right">{event.image_count}</TableCell>
             </TableRow>
           ))}
         </TableBody>
