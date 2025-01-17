@@ -26,11 +26,18 @@ export async function GET(
     await writer.close();
   });
 
+  // Obtener conteo total de imágenes
+  const { count } = await supabase
+    .from('images')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_id', params.eventId);
+
   // Iniciar el streaming de la respuesta
   const response = new Response(stream.readable, {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`
+      'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`,
+      'Content-Length': String((count || 0) * 1024 * 1024) // Estimado aproximado
     }
   });
 

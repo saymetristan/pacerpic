@@ -15,6 +15,7 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Event {
   id: string;
@@ -32,6 +33,7 @@ export function EventsTable() {
   const { user } = useUser();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -102,25 +104,44 @@ export function EventsTable() {
                 <Button
                   variant="outline"
                   size="sm"
+                  disabled={downloading[event.id] !== undefined}
                   onClick={async () => {
                     try {
+                      setDownloading(prev => ({ ...prev, [event.id]: 0 }));
                       const response = await fetch(`/api/events/${event.id}/download`);
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `${event.name}-fotos.zip`;
-                      document.body.appendChild(link);
-                      link.click();
-                      link.remove();
-                      window.URL.revokeObjectURL(url);
+                      const reader = response.body?.getReader();
+                      if (!reader) return;
+
+                      const contentLength = +(response.headers.get('Content-Length') ?? 0);
+                      let receivedLength = 0;
+
+                      while(true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        
+                        receivedLength += value.length;
+                        const progress = (receivedLength / contentLength) * 100;
+                        setDownloading(prev => ({ ...prev, [event.id]: progress }));
+                      }
                     } catch (error) {
                       console.error('Error al descargar:', error);
+                    } finally {
+                      setDownloading(prev => {
+                        const newState = { ...prev };
+                        delete newState[event.id];
+                        return newState;
+                      });
                     }
                   }}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar todas
+                  {downloading[event.id] !== undefined ? (
+                    <Progress value={downloading[event.id]} className="w-24" />
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Descargar todas
+                    </>
+                  )}
                 </Button>
               </TableCell>
             </TableRow>
