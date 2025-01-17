@@ -2,23 +2,21 @@ import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
-export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: false
-  }
-};
+// Nueva forma de configurar límites en Next.js 14
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutos
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-  if (req.headers.get('content-length') && 
-      parseInt(req.headers.get('content-length')!) > 10 * 1024 * 1024) {
-    return NextResponse.json(
-      { error: 'Imagen demasiado grande. Máximo 10MB' },
-      { status: 413 }
-    );
-  }
-  
   try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'Imagen demasiado grande. Máximo 10MB' },
+        { status: 413 }
+      );
+    }
+
     const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
