@@ -2,14 +2,6 @@ import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
-};
-
 export async function POST(req: Request) {
   try {
     const session = await getSession();
