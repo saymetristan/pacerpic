@@ -17,16 +17,21 @@ export async function GET(
     }
 
     const zip = new JSZip();
+    
+    // Procesar las imágenes secuencialmente para evitar corrupción
+    for (let i = 0; i < images.length; i++) {
+      const response = await fetch(images[i].compressed_url);
+      const arrayBuffer = await response.arrayBuffer();
+      zip.file(`imagen-${i + 1}.jpg`, arrayBuffer);
+    }
 
-    // Descargar y añadir cada imagen al ZIP
-    const imagePromises = images.map(async (image, index) => {
-      const response = await fetch(image.compressed_url);
-      const blob = await response.blob();
-      zip.file(`imagen-${index + 1}.jpg`, blob);
+    const zipBlob = await zip.generateAsync({ 
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: {
+        level: 6
+      }
     });
-
-    await Promise.all(imagePromises);
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
 
     return new NextResponse(zipBlob, {
       headers: {
