@@ -11,19 +11,20 @@ export function useAuthSync() {
   useEffect(() => {
     async function syncUser() {
       if (!isLoading && user) {
+        console.log('Auth0 user:', user);
         try {
           const { data: existingUser, error: selectError } = await supabase
             .from('users')
             .select('*')
-            .eq('auth0_id', user.sub)
+            .eq('auth0_id', user.user_id)
             .single();
 
           if (selectError && selectError.code === 'PGRST116') {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
-                auth0_id: user.sub,
-                role: 'admin',
+                auth0_id: user.user_id,
+                role: (user.user_metadata as { role?: string })?.role || 'admin',
                 email: user.email,
                 name: user.name
               }, {

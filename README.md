@@ -874,7 +874,7 @@ export function useAuthSync() {
           const { data: existingUser, error: selectError } = await supabase
             .from('users')
             .select('*')
-            .eq('auth0_id', user.sub)
+            .eq('auth0_id', user.user_id)
             .single();
 
           if (selectError && selectError.code !== 'PGRST116') {
@@ -886,7 +886,7 @@ export function useAuthSync() {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
-                auth0_id: user.sub,
+                auth0_id: user.user_id,
                 role: 'admin',
                 email: user.email,
                 name: user.name
@@ -1034,7 +1034,7 @@ export function useImages() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('eventId', eventId);
-      formData.append('photographerId', user.sub);
+      formData.append('photographerId', user.user_id);
 
       const response = await axios.post('/api/images/upload', formData, {
         onUploadProgress: (progressEvent) => {
