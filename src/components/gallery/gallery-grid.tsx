@@ -16,9 +16,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function GalleryGrid() {
+interface GalleryGridProps {
+  filters: {
+    status: string;
+    events: string[];
+    tags: string[];
+  };
+}
+
+export function GalleryGrid({ filters }: GalleryGridProps) {
   const { images, loading } = useGallery();
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+
+  const filteredImages = images.filter(image => {
+    if (filters.status !== 'all' && image.status !== filters.status) return false;
+    if (filters.events.length && !filters.events.includes(image.event_id || '')) return false;
+    if (filters.tags.length && !image.tags?.some(tag => filters.tags.includes(tag))) return false;
+    return true;
+  });
 
   if (loading) {
     return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -37,7 +52,7 @@ export function GalleryGrid() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {images.map((image) => (
+        {filteredImages.map((image) => (
           <Card key={image.id} className="overflow-hidden">
             <div className="relative aspect-[4/3]">
               <Image

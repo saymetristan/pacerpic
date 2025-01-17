@@ -11,6 +11,7 @@ export interface GalleryImage {
   compressed_url: string;
   status: string | null;
   created_at: string;
+  tags: string[];
   event: {
     name: string;
     date: string;
@@ -36,7 +37,8 @@ export function useGallery() {
         .select(`
           *,
           event:events(name, date, location),
-          image_dorsals(dorsal_number, confidence)
+          image_dorsals(dorsal_number, confidence),
+          tags
         `)
         .order('created_at', { ascending: false });
 
@@ -45,7 +47,8 @@ export function useGallery() {
       // Transformar los datos para que coincidan con la interfaz
       const transformedData: GalleryImage[] = (data || []).map(img => ({
         ...img,
-        image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : []
+        image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : [],
+        tags: img.tags || []
       }));
       
       setImages(transformedData);

@@ -1,31 +1,54 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/lib/supabase";
 
-const events = [
-  "Maratón de Madrid 2024",
-  "Trail Sierra Norte",
-  "San Silvestre Vallecana",
-  "10K Valencia",
-  "Trail Guadarrama",
-];
+interface GalleryFiltersProps {
+  onFilterChange: (filters: {
+    status: string;
+    events: string[];
+    tags: string[];
+  }) => void;
+}
 
-const tags = [
-  "Llegada",
-  "Salida",
-  "Avituallamiento",
-  "Paisaje",
-  "Grupo",
-  "Individual",
-  "Podio",
-];
+export function GalleryFilters({ onFilterChange }: GalleryFiltersProps) {
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [events, setEvents] = useState<{id: string, name: string}[]>([]);
 
-export function GalleryFilters() {
+  const tags = [
+    "Llegada", "Salida", "Avituallamiento", 
+    "Paisaje", "Grupo", "Individual", "Podio"
+  ];
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('id, name')
+        .order('date', { ascending: false });
+      
+      if (data) setEvents(data);
+    };
+
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    onFilterChange({
+      status: selectedStatus,
+      events: selectedEvents,
+      tags: selectedTags
+    });
+  }, [selectedStatus, selectedEvents, selectedTags, onFilterChange]);
+
   return (
     <Card className="sticky top-8">
       <CardHeader>
@@ -34,7 +57,10 @@ export function GalleryFilters() {
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <Label>Estado</Label>
-          <RadioGroup defaultValue="all">
+          <RadioGroup 
+            value={selectedStatus} 
+            onValueChange={setSelectedStatus}
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="all" id="all" />
               <Label htmlFor="all">Todas</Label>
@@ -61,9 +87,21 @@ export function GalleryFilters() {
           <ScrollArea className="h-[120px]">
             <div className="space-y-2">
               {events.map((event) => (
-                <div key={event} className="flex items-center space-x-2">
-                  <input type="checkbox" id={event} className="rounded" />
-                  <Label htmlFor={event}>{event}</Label>
+                <div key={event.id} className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id={event.id}
+                    checked={selectedEvents.includes(event.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedEvents([...selectedEvents, event.id]);
+                      } else {
+                        setSelectedEvents(selectedEvents.filter(id => id !== event.id));
+                      }
+                    }}
+                    className="rounded" 
+                  />
+                  <Label htmlFor={event.id}>{event.name}</Label>
                 </div>
               ))}
             </div>
@@ -78,8 +116,15 @@ export function GalleryFilters() {
             {tags.map((tag) => (
               <Badge
                 key={tag}
-                variant="outline"
+                variant={selectedTags.includes(tag) ? "default" : "outline"}
                 className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                onClick={() => {
+                  if (selectedTags.includes(tag)) {
+                    setSelectedTags(selectedTags.filter(t => t !== tag));
+                  } else {
+                    setSelectedTags([...selectedTags, tag]);
+                  }
+                }}
               >
                 {tag}
               </Badge>
