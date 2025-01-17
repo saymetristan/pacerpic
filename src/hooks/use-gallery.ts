@@ -48,6 +48,7 @@ interface SupabaseImage {
 export function useGallery(userId?: string) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -89,5 +90,10 @@ export function useGallery(userId?: string) {
     fetchImages();
   }, [userId]);
 
-  return { images, loading };
+  return {
+    images,
+    loading,
+    searchQuery,
+    setSearchQuery
+  };
 } 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useGallery } from "@/hooks/use-gallery";
+import { Input } from "@/components/ui/input";
 
 export function GalleryHeader() {
   const { searchQuery, setSearchQuery } = useGallery();
@@ -12,6 +13,14 @@ export function GalleryHeader() {
         <p className="text-muted-foreground">
           Gestiona y organiza todas tus fotografías
         </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder="Buscar imágenes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
       </div>
     </div>
   );
