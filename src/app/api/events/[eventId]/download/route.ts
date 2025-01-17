@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import archiver from 'archiver';
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public';
 const CHUNK_SIZE = 10;
@@ -15,15 +14,8 @@ export async function GET(request: Request, { params }: { params: { eventId: str
       return new Response('No hay imágenes', { status: 404 });
     }
 
-    // Crear el stream y el archivo ZIP
-    const archive = archiver('zip', {
-      store: true // Sin compresión para mayor velocidad
-    });
-
-    const chunks: Uint8Array[] = [];
-    archive.on('data', chunk => chunks.push(chunk));
-
-    // Procesar imágenes
+    // Obtener todas las imágenes primero
+    const allImages = [];
     for (let offset = 0; offset < count; offset += CHUNK_SIZE) {
       const { data: images } = await supabase
         .from('images')
@@ -32,26 +24,40 @@ export async function GET(request: Request, { params }: { params: { eventId: str
         .range(offset, offset + CHUNK_SIZE - 1);
 
       if (!images?.length) break;
-
-      for (const image of images) {
-        const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
-        const response = await fetch(imageUrl);
-        if (response.ok) {
-          const buffer = await response.arrayBuffer();
-          archive.append(Buffer.from(buffer), { name: `imagen-${offset + 1}.jpg` });
-        }
-      }
+      allImages.push(...images);
     }
 
-    await archive.finalize();
+    // Descargar todas las imágenes
+    const imageBuffers = await Promise.all(
+      allImages.map(async (image, index) => {
+        const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
+        const response = await fetch(imageUrl);
+        if (!response.ok) return null;
+        const buffer = await response.arrayBuffer();
+        return {
+          buffer: Buffer.from(buffer),
+          name: `imagen-${index + 1}.jpg`
+        };
+      })
+    );
 
-    // Combinar chunks y enviar respuesta
-    const zipBuffer = Buffer.concat(chunks);
-    return new Response(zipBuffer, {
+    // Crear un único buffer con todas las imágenes
+    const totalSize = imageBuffers.reduce((size, img) => size + (img?.buffer.length || 0), 0);
+    const finalBuffer = Buffer.alloc(totalSize);
+    let offset = 0;
+
+    imageBuffers.forEach(img => {
+      if (img?.buffer) {
+        img.buffer.copy(finalBuffer, offset);
+        offset += img.buffer.length;
+      }
+    });
+
+    return new Response(finalBuffer, {
       headers: {
-        'Content-Type': 'application/zip',
+        'Content-Type': 'application/octet-stream',
         'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`,
-        'Content-Length': zipBuffer.length.toString()
+        'Content-Length': finalBuffer.length.toString()
       }
     });
 
