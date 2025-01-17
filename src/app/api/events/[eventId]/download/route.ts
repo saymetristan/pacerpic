@@ -45,16 +45,16 @@ export async function GET(
 
     if (!images?.length) break;
 
-    for (const image of images) {
-      const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
+    for (let i = 0; i < images.length; i++) {
+      const imageUrl = `${STORAGE_URL}/compressed/${images[i].compressed_url}`;
       const response = await fetch(imageUrl);
       if (response.ok) {
         const buffer = await response.arrayBuffer();
-        archive.append(Buffer.from(buffer), { name: `imagen-${offset + 1}.jpg` });
+        archive.append(Buffer.from(buffer), { name: `imagen-${offset + i + 1}.jpg` });
       }
     }
 
-    offset += CHUNK_SIZE;
+    offset += images.length;
   }
 
   archive.finalize();
