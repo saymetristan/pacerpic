@@ -88,9 +88,21 @@ export async function processImage(
         {
           input: Buffer.from(watermarkBuffer),
           gravity: 'center',
-          blend: 'over'
+          blend: 'over',
+          // Ajustar el marco al tamaño de la imagen
+          top: 0,
+          left: 0,
+          tile: false,
+          premultiplied: true
         }
-      ]);
+      ])
+      // Mantener las dimensiones originales
+      .resize({
+        width: metadata.width,
+        height: metadata.height,
+        fit: 'contain',
+        position: 'center'
+      });
 
     // Obtener el buffer de la imagen comprimida para OpenAI
     const base64Image = (await compressedImage.toBuffer()).toString('base64');
