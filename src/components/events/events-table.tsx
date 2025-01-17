@@ -39,7 +39,7 @@ export function EventsTable() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        if (!user?.user_id) return;
+        if (!user?.sub) return;
 
         const { data, error } = await supabase
           .from('events')
@@ -47,7 +47,7 @@ export function EventsTable() {
             *,
             images:images(count)
           `)
-          .eq('organizer_id', user?.sub || '')
+          .eq('organizer_id', user.sub)
           .order('date', { ascending: false });
 
         if (error) throw error;
