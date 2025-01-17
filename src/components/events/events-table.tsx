@@ -47,7 +47,7 @@ export function EventsTable() {
             *,
             images:images(count)
           `)
-          .eq('organizer_id', (user as { user_id: string }).user_id)
+          .eq('organizer_id', user?.sub || '')
           .order('date', { ascending: false });
 
         if (error) throw error;
