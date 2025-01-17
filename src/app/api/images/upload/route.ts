@@ -2,9 +2,10 @@ import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
-// Nueva forma de configurar límites en Next.js 14
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 export const runtime = 'nodejs';
-export const maxDuration = 300; // 5 minutos
+export const preferredRegion = 'iad1';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
