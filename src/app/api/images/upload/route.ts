@@ -40,12 +40,10 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json(imageData);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error detallado:', error);
-    return NextResponse.json(
-      { error: error.message || 'Error procesando imagen' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Error procesando imagen';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
