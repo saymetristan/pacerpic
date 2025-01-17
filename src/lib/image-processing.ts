@@ -87,21 +87,21 @@ export async function processImage(
       .composite([
         {
           input: Buffer.from(watermarkBuffer),
+          raw: {
+            width: metadata.width || 0,
+            height: metadata.height || 0,
+            channels: 4
+          },
           gravity: 'center',
           blend: 'over',
-          // Ajustar el marco al tamaño de la imagen
-          top: 0,
-          left: 0,
           tile: false,
           premultiplied: true
         }
       ])
-      // Mantener las dimensiones originales
       .resize({
         width: metadata.width,
         height: metadata.height,
-        fit: 'contain',
-        position: 'center'
+        fit: 'fill'
       });
 
     // Obtener el buffer de la imagen comprimida para OpenAI
