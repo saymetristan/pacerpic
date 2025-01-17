@@ -9,61 +9,67 @@ export async function GET(
   request: Request,
   { params }: { params: { eventId: string } }
 ) {
-  const encoder = new TextEncoder();
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
-  
-  const archive = archiver('zip', {
-    store: true // Sin compresión
-  });
-
-  // Convertir el stream de archiver a un formato que el navegador pueda leer
-  archive.on('data', async (chunk: Buffer) => {
-    await writer.write(chunk);
-  });
-
-  archive.on('end', async () => {
-    await writer.close();
-  });
-
-  // Obtener conteo total de imágenes
-  const { count } = await supabase
-    .from('images')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_id', params.eventId);
-
-  // Iniciar el streaming de la respuesta
-  const response = new Response(stream.readable, {
-    headers: {
-      'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`,
-      'Content-Length': String((count || 0) * 1024 * 1024) // Estimado aproximado
-    }
-  });
-
-  // Procesar imágenes en chunks
-  let offset = 0;
-  while (true) {
-    const { data: images } = await supabase
+  try {
+    const { count } = await supabase
       .from('images')
-      .select('compressed_url')
-      .eq('event_id', params.eventId)
-      .range(offset, offset + CHUNK_SIZE - 1);
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', params.eventId);
 
-    if (!images?.length) break;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const archive = archiver('zip', { store: true });
 
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = `${STORAGE_URL}/compressed/${images[i].compressed_url}`;
-      const response = await fetch(imageUrl);
-      if (response.ok) {
-        const buffer = await response.arrayBuffer();
-        archive.append(Buffer.from(buffer), { name: `imagen-${offset + i + 1}.jpg` });
+    archive.on('data', async (chunk: Buffer) => {
+      await writer.write(chunk);
+    });
+
+    archive.on('warning', (err) => {
+      console.warn('Advertencia de archiver:', err);
+    });
+
+    archive.on('error', (err) => {
+      console.error('Error de archiver:', err);
+      writer.abort(err);
+    });
+
+    archive.on('end', () => {
+      writer.close();
+    });
+
+    // Procesar imágenes
+    let offset = 0;
+    while (true) {
+      const { data: images } = await supabase
+        .from('images')
+        .select('compressed_url')
+        .eq('event_id', params.eventId)
+        .range(offset, offset + CHUNK_SIZE - 1);
+
+      if (!images?.length) break;
+
+      for (const image of images) {
+        const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
+        const response = await fetch(imageUrl);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          archive.append(Buffer.from(buffer), { name: `imagen-${offset + 1}.jpg` });
+        }
+        offset++;
       }
     }
 
-    offset += images.length;
-  }
+    // Finalizar el archivo ZIP
+    archive.finalize();
 
-  archive.finalize();
-  return response;
+    return new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="event-${params.eventId}-photos.zip"`,
+        'Content-Length': String((count || 0) * 1024 * 1024)
+      }
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response('Error interno', { status: 500 });
+  }
 } 
