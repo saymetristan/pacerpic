@@ -9,6 +9,27 @@ const openai = new OpenAI({
 const WATERMARK_VERTICAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/vertical-juntos.png';
 const WATERMARK_HORIZONTAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/horizontal-juntos.png';
 
+// Función auxiliar para comprimir imagen inicial
+async function compressInitialImage(file: Buffer) {
+  const metadata = await sharp(file).metadata();
+  const isLarge = (metadata.width || 0) > 2000 || (metadata.height || 0) > 2000;
+
+  return sharp(file)
+    .resize(isLarge ? 2000 : metadata.width, isLarge ? 2000 : metadata.height, {
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .jpeg({
+      quality: 75,
+      mozjpeg: true,
+      chromaSubsampling: '4:2:0',
+      trellisQuantisation: true,
+      overshootDeringing: true,
+      optimizeScans: true,
+    })
+    .toBuffer();
+}
+
 export async function processImage(
   file: Buffer, 
   fileName: string, 
@@ -43,26 +64,20 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // Comprime la imagen original manteniendo buena calidad
-    const compressedOriginal = await sharp(file)
-      .jpeg({
-        quality: 85,
-        mozjpeg: true, // Usa mozjpeg para mejor compresión
-        chromaSubsampling: '4:4:4' // Mantiene la calidad del color
-      })
-      .toBuffer();
-
+    // Compresión inicial agresiva
+    const compressedOriginal = await compressInitialImage(file);
+    
     // Obtén metadatos para determinar orientación
     const metadata = await sharp(compressedOriginal).metadata();
     const isVertical = (metadata.height || 0) > (metadata.width || 0);
 
-    // Versión pequeña para OpenAI
+    // Versión más pequeña para OpenAI
     const resizedForAI = await sharp(compressedOriginal)
-      .resize(800, 800, {
+      .resize(600, 600, {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 80 })
+      .jpeg({ quality: 70 })
       .toBuffer();
 
     // Descarga y procesa el watermark
