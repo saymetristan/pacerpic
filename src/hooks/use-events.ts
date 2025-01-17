@@ -31,17 +31,23 @@ export function useEvents(userId?: string) {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      if (!userId) return;
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('*')
-          .eq('organizer_id', userId)
+          .select(`
+            *,
+            images:images(count)
+          `)
           .order('date', { ascending: false });
 
         if (error) throw error;
 
-        setEvents(data || []);
+        // Si hay userId, filtra los eventos
+        const filteredData = userId 
+          ? data.filter(event => event.organizer_id === userId)
+          : data;
+
+        setEvents(filteredData || []);
       } catch (err) {
         console.error('Error al obtener eventos:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
