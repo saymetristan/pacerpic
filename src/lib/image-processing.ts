@@ -70,31 +70,39 @@ export async function processImage(
     const metadata = await sharp(file).metadata();
     const isVertical = (metadata.height || 0) > (metadata.width || 0);
     
+    // Crear copia reducida para OpenAI (máximo 1024x1024)
+    const resizedForAI = await sharp(file)
+      .resize(1024, 1024, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
     // Descargar el marco según orientación
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
-    // Primero redimensionar el watermark al tamaño de la imagen original
+    // Redimensionar el watermark al tamaño exacto de la imagen original
     const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
-      .resize(metadata.width || 0, metadata.height || 0, {
+      .resize(metadata.width, metadata.height, {
         fit: 'fill'
       })
-      .png({ quality: 80 })
+      .png()
       .toBuffer();
 
-    // Luego aplicar el watermark redimensionado
+    // Aplicar el watermark a la imagen original
     const watermarkedImage = await sharp(file)
       .composite([
         {
           input: resizedWatermark,
-          gravity: 'center',
-          blend: 'over'
+          gravity: 'center'
         }
       ])
       .jpeg({ quality: 85 });
 
-    // Obtener el buffer de la imagen comprimida para OpenAI
-    const base64Image = (await watermarkedImage.toBuffer()).toString('base64');
+    // Usar la imagen reducida para OpenAI
+    const base64Image = resizedForAI.toString('base64');
 
     // 3. Detectar dorsales con OpenAI usando la imagen original
     const response = await openai.chat.completions.create({
