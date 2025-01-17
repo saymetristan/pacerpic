@@ -35,7 +35,7 @@ export function useGallery() {
         .from('images')
         .select(`
           *,
-          event:events(name, date),
+          event:events(name, date, location),
           image_dorsals(dorsal_number)
         `)
         .order('created_at', { ascending: false });
