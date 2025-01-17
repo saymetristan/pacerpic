@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { PostgrestError } from '@supabase/supabase-js';
 
 export interface GalleryImage {
   id: string;
@@ -59,7 +60,10 @@ export function useGallery() {
           event:events(name, date, location),
           image_dorsals(dorsal_number, confidence)
         `)
-        .order('created_at', { ascending: false }) as { data: SupabaseImage[] | null, error: any };
+        .order('created_at', { ascending: false }) as { 
+          data: SupabaseImage[] | null, 
+          error: PostgrestError | null 
+        };
 
       if (error) throw error;
       
