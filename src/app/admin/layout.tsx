@@ -27,13 +27,13 @@ export default function AdminLayout({
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <DashboardProvider>
-      {children}
+      <main className="min-h-screen bg-background">
+        {children}
+      </main>
     </DashboardProvider>
   );
 } 
