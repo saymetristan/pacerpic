@@ -1,7 +1,60 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { formatDate } from "@/lib/utils";
+import { getSession } from "@auth0/nextjs-auth0";
 
-export default function AdminDashboardPage() {
+async function getDashboardStats() {
+  const session = await getSession();
+  const user = session?.user;
+
+  const { data: events } = await supabase
+    .from('events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  const { count: totalEvents } = await supabase
+    .from('events')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalPhotographers } = await supabase
+    .from('events')
+    .select('*', { count: 'exact', head: true })
+    .eq('organizer_id', user?.sub)
+    .eq('role', 'photographer');
+
+  const { count: totalImages } = await supabase
+    .from('images')
+    .select('*', { count: 'exact', head: true });
+
+  // Eventos este mes
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  const { count: eventsThisMonth } = await supabase
+    .from('events')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', startOfMonth.toISOString());
+
+  // Imágenes este mes
+  const { count: imagesThisMonth } = await supabase
+    .from('images')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', startOfMonth.toISOString());
+
+  return {
+    events,
+    totalEvents,
+    totalPhotographers,
+    totalImages,
+    eventsThisMonth,
+    imagesThisMonth
+  };
+}
+
+export default async function AdminDashboardPage() {
+  const stats = await getDashboardStats();
+
   return (
     <div className="p-8 space-y-8">
       <h2 className="text-3xl font-bold tracking-tight">Panel de Administración</h2>
@@ -13,9 +66,9 @@ export default function AdminDashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{stats.totalEvents}</div>
             <p className="text-xs text-muted-foreground">
-              +3 este mes
+              +{stats.eventsThisMonth} este mes
             </p>
           </CardContent>
         </Card>
@@ -26,10 +79,7 @@ export default function AdminDashboardPage() {
             <Camera className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">
-              +12 este mes
-            </p>
+            <div className="text-2xl font-bold">{stats.totalPhotographers}</div>
           </CardContent>
         </Card>
 
@@ -39,9 +89,9 @@ export default function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45,231</div>
+            <div className="text-2xl font-bold">{stats.totalImages}</div>
             <p className="text-xs text-muted-foreground">
-              +2,345 este mes
+              +{stats.imagesThisMonth} este mes
             </p>
           </CardContent>
         </Card>
@@ -54,16 +104,16 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {events.map((event) => (
-                <div key={event.name} className="flex items-center">
+              {stats.events?.map((event) => (
+                <div key={event.id} className="flex items-center">
                   <div className="space-y-1 flex-1">
                     <p className="text-sm font-medium leading-none">{event.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {event.photographers} fotógrafos asignados
+                      {event.location}
                     </p>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {event.date}
+                    {formatDate(event.date)}
                   </div>
                 </div>
               ))}
@@ -74,21 +124,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-const events = [
-  {
-    name: "Maratón de Madrid 2024",
-    photographers: 12,
-    date: "15 Abr 2024"
-  },
-  {
-    name: "Trail Sierra Norte",
-    photographers: 8,
-    date: "20 Mar 2024"
-  },
-  {
-    name: "10K Valencia",
-    photographers: 6,
-    date: "15 Feb 2024"
-  }
-];
