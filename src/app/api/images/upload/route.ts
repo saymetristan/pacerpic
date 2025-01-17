@@ -2,11 +2,17 @@ import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
-    console.log('Session:', session);
-
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -14,36 +20,30 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
-    const photographerId = session.user.sub;
+    const photographerId = formData.get('photographerId') as string;
 
-    console.log('Upload params:', { 
-      fileExists: !!file, 
-      eventId, 
-      photographerId,
-      fileName: file?.name 
-    });
-
-    if (!file || !eventId || !photographerId) {
+    if (!file || !eventId || !isValidUUID(eventId) || !photographerId) {
       return NextResponse.json(
-        { error: 'Archivo, eventId y photographerId son requeridos' },
+        { error: 'Archivo, eventId (UUID válido) y photographerId son requeridos' },
         { status: 400 }
       );
     }
 
+    const accessToken = session.accessToken;
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Token de acceso no encontrado' }, { status: 401 });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageData = await processImage(
-      buffer, 
-      file.name, 
-      eventId, 
-      photographerId,
-      session.accessToken || ''
-    );
+    const imageData = await processImage(buffer, file.name, eventId, photographerId, accessToken);
 
     return NextResponse.json(imageData);
-  } catch (error: unknown) {
-    console.error('Error detallado:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Error procesando imagen';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  } catch (error) {
+    console.error('Error procesando imagen:', error);
+    return NextResponse.json(
+      { error: 'Error procesando imagen' },
+      { status: 500 }
+    );
   }
 }
 

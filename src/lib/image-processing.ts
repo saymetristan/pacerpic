@@ -43,24 +43,33 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // Obtenemos metadatos: alto y ancho de la imagen original
-    const metadata = await sharp(file).metadata();
+    // Comprime la imagen original manteniendo buena calidad
+    const compressedOriginal = await sharp(file)
+      .jpeg({
+        quality: 85,
+        mozjpeg: true, // Usa mozjpeg para mejor compresión
+        chromaSubsampling: '4:4:4' // Mantiene la calidad del color
+      })
+      .toBuffer();
+
+    // Obtén metadatos para determinar orientación
+    const metadata = await sharp(compressedOriginal).metadata();
     const isVertical = (metadata.height || 0) > (metadata.width || 0);
 
-    // Esta imagen reducida va para OpenAI (máximo 1024x1024)
-    const resizedForAI = await sharp(file)
-      .resize(1024, 1024, {
+    // Versión pequeña para OpenAI
+    const resizedForAI = await sharp(compressedOriginal)
+      .resize(800, 800, {
         fit: 'inside',
         withoutEnlargement: true
       })
       .jpeg({ quality: 80 })
       .toBuffer();
 
-    // Descarga el watermark según la orientación
+    // Descarga y procesa el watermark
     const watermarkResponse = await fetch(isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL);
     const watermarkBuffer = await watermarkResponse.arrayBuffer();
 
-    // Ajusta el watermark al tamaño exacto de la imagen original
+    // Redimensiona el watermark al tamaño de la imagen
     const resizedWatermark = await sharp(Buffer.from(watermarkBuffer))
       .resize(metadata.width, metadata.height, {
         fit: 'fill'
@@ -68,15 +77,19 @@ export async function processImage(
       .png()
       .toBuffer();
 
-    // Aplica el watermark sobre la imagen original
-    const watermarkedImage = await sharp(file)
+    // Versión comprimida con marca de agua
+    const watermarkedImage = await sharp(compressedOriginal)
       .composite([
         {
           input: resizedWatermark,
           gravity: 'center'
         }
       ])
-      .jpeg({ quality: 85 });
+      .jpeg({ 
+        quality: 80,
+        mozjpeg: true,
+        chromaSubsampling: '4:2:0'
+      });
 
     // Llamada a OpenAI con la imagen reducida
     const base64Image = resizedForAI.toString('base64');
@@ -137,7 +150,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, await watermarkedImage.toBuffer(), {
+      .upload(originalPath, compressedOriginal, {
         cacheControl: '3600',
         upsert: true
       });
@@ -148,7 +161,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     // Subimos la misma imagen con watermark al bucket compressed (puede ser la misma)
     const { error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, await watermarkedImage.toBuffer(), {
+      .upload(compressedPath, compressedOriginal, {
         cacheControl: '3600',
         upsert: true
       });
