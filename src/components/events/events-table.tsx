@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface Event {
   id: string;
@@ -77,6 +79,7 @@ export function EventsTable() {
             <TableHead>Ubicación</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Fotos</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -95,6 +98,31 @@ export function EventsTable() {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">{event.image_count}</TableCell>
+              <TableCell>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/events/${event.id}/download`);
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `${event.name}-fotos.zip`;
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                    } catch (error) {
+                      console.error('Error al descargar:', error);
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar todas
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
