@@ -18,12 +18,7 @@ export function useAuthSync() {
             .eq('auth0_id', user.sub)
             .single();
 
-          if (selectError && selectError.code !== 'PGRST116') {
-            console.error('Error verificando usuario:', selectError);
-            return;
-          }
-
-          if (!existingUser) {
+          if (selectError && selectError.code === 'PGRST116') {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
@@ -39,6 +34,9 @@ export function useAuthSync() {
               console.error('Error creando usuario:', upsertError);
               return;
             }
+          } else if (selectError) {
+            console.error('Error verificando usuario:', selectError);
+            return;
           }
 
           const response = await fetch('/api/auth/session');
