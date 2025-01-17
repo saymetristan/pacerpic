@@ -24,6 +24,26 @@ export interface GalleryImage {
   sales_count?: number;
 }
 
+interface SupabaseImage {
+  id: string;
+  event_id: string | null;
+  photographer_id: string | null;
+  original_url: string;
+  compressed_url: string;
+  status: string | null;
+  created_at: string;
+  tags: string[] | null;
+  event: {
+    name: string;
+    date: string;
+    location: string | null;
+  } | null;
+  image_dorsals: {
+    dorsal_number: string;
+    confidence: number;
+  }[] | null;
+}
+
 export function useGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,15 +57,14 @@ export function useGallery() {
         .select(`
           *,
           event:events(name, date, location),
-          image_dorsals(dorsal_number, confidence),
-          tags
+          image_dorsals(dorsal_number, confidence)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: SupabaseImage[] | null, error: any };
 
       if (error) throw error;
       
       // Transformar los datos para que coincidan con la interfaz
-      const transformedData: GalleryImage[] = (data || []).map(img => ({
+      const transformedData: GalleryImage[] = (data || []).map((img: SupabaseImage) => ({
         ...img,
         image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : [],
         tags: img.tags || []
