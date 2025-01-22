@@ -6,6 +6,8 @@ import { UploadZone } from "@/components/upload/upload-zone";
 import { UploadProgress } from "@/components/upload/upload-progress";
 import { useImages } from "@/hooks/use-images";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import Image from "next/image";
 
 export default function UploadPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
@@ -28,6 +30,10 @@ export default function UploadPage() {
     }
   };
 
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col p-8">
       <UploadHeader onEventChange={setSelectedEventId} />
@@ -41,15 +47,39 @@ export default function UploadPage() {
             />
             
             {selectedFiles.length > 0 && (
-              <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
-                <span>{selectedFiles.length} archivos seleccionados</span>
-                <Button 
-                  onClick={handleProcess}
-                  className="bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
-                >
-                  Procesar {selectedFiles.length} imágenes
-                </Button>
-              </div>
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto p-4 bg-muted rounded-lg">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square relative rounded-lg overflow-hidden">
+                        <Image
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          fill
+                          className="object-cover"
+                        />
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <p className="text-xs mt-1 truncate">{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
+                  <span>{selectedFiles.length} archivos seleccionados</span>
+                  <Button 
+                    onClick={handleProcess}
+                    className="bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
+                  >
+                    Procesar {selectedFiles.length} imágenes
+                  </Button>
+                </div>
+              </>
             )}
           </div>
           
