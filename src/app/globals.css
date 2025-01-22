@@ -137,3 +137,32 @@ body {
 .masonry-grid_column > div {
   margin-bottom: 16px;
 }
+
+.custom-popover {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #1A3068;
+  --driver-stage-color: #EC6533;
+}
+
+.driver-popover.custom-popover .driver-popover-title {
+  color: #1A3068;
+  font-weight: bold;
+}
+
+.driver-popover.custom-popover .driver-popover-description {
+  color: #4A4A4A;
+}
+
+.driver-popover.custom-popover .driver-popover-footer button {
+  background: #EC6533;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.driver-popover.custom-popover .driver-popover-footer button:hover {
+  background: #d55a2e;
+}

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 // Si tienes la interfaz Event en un archivo separado, impórtala aquí
 // import { Event } from "@/hooks/use-events";
@@ -47,6 +49,66 @@ export function SearchForm() {
     router.push(`/search?eventId=${selectedRace}&dorsal=${dorsal}`);
   };
 
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+    
+    if (!hasSeenTour) {
+      const driverObj = driver({
+        showProgress: true,
+        animate: true,
+        overlayColor: '#1A3068',
+        stagePadding: 4,
+        popoverClass: 'custom-popover',
+        steps: [
+          {
+            element: '[data-tour="select-event"]',
+            popover: {
+              title: 'Selecciona tu Carrera',
+              description: 'Elige el evento deportivo del que quieres ver tus fotos.',
+              side: "bottom",
+              align: 'start'
+            }
+          },
+          {
+            element: '[data-tour="dorsal-input"]',
+            popover: {
+              title: 'Ingresa tu Dorsal',
+              description: 'Escribe el número que llevabas en la carrera para encontrar tus fotos.',
+              side: "top",
+              align: 'start'
+            }
+          },
+          {
+            element: '[data-tour="search-button"]',
+            popover: {
+              title: '¡Encuentra tus Fotos!',
+              description: 'Haz clic aquí para ver todas las fotos donde apareces.',
+              side: "left",
+              align: 'center'
+            }
+          },
+          {
+            element: '[data-tour="all-photos"]',
+            popover: {
+              title: '¿Quieres Ver Todas las Fotos?',
+              description: 'También puedes explorar todas las fotos del evento.',
+              side: "bottom",
+              align: 'start'
+            },
+            onDeselected: () => {
+              driverObj.destroy();
+            }
+          }
+        ]
+      });
+
+      setTimeout(() => {
+        driverObj.drive();
+        localStorage.setItem('hasSeenTour', 'true');
+      }, 1000);
+    }
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -57,7 +119,7 @@ export function SearchForm() {
       <form onSubmit={handleSearch} className="flex flex-col gap-4">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
-            <div className="flex-1">
+            <div className="flex-1" data-tour="select-event">
               <Select onValueChange={setSelectedRace} disabled={loading}>
                 <SelectTrigger className="w-full bg-white/10 backdrop-blur-md border-white/20 text-white">
                   <SelectValue placeholder={loading ? "Cargando eventos..." : "Selecciona tu carrera"}>
@@ -93,6 +155,7 @@ export function SearchForm() {
                 onClick={() => router.push(`/event/${selectedRace}`)}
                 variant="outline"
                 className="border-white/70 bg-white/20 text-black/70 hover:bg-white/30 hover:border-white whitespace-nowrap transition-colors backdrop-blur-sm"
+                data-tour="all-photos"
               >
                 Ver todas las fotos
               </Button>
@@ -107,11 +170,13 @@ export function SearchForm() {
               placeholder="Ingresa tu número de dorsal"
               className="bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/70"
               maxLength={5}
+              data-tour="dorsal-input"
             />
             <Button
               type="submit"
               disabled={!selectedRace || !dorsal || isLoading}
               className="absolute right-0 top-0 h-full bg-[#EC6533] hover:bg-[#EC6533]/90 text-white px-4"
+              data-tour="search-button"
             >
               {isLoading ? (
                 "Buscando..."
