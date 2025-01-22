@@ -4,10 +4,9 @@ import { useDropzone } from "react-dropzone";
 import { Upload, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UploadZoneProps {
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload: (files: File[]) => void;
   isUploading: boolean;
 }
 
@@ -44,7 +43,7 @@ export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
             </div>
             <div className="text-center space-y-2">
               <h3 className="font-semibold">
-                {isDragActive ? "Suelta para subir" : "Arrastra tus imágenes aquí"}
+                {isDragActive ? "Suelta para seleccionar" : "Arrastra tus imágenes aquí"}
               </h3>
               <p className="text-sm text-muted-foreground">
                 o haz clic para seleccionarlas
