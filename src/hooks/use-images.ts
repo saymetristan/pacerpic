@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import imageCompression from 'browser-image-compression';
 
 interface UploadProgress {
   fileName: string;
@@ -26,8 +27,14 @@ export function useImages() {
     }
 
     try {
+      const compressedFile = await imageCompression(file, {
+        maxSizeMB: 5,
+        maxWidthOrHeight: 4096,
+        useWebWorker: true
+      });
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('eventId', eventId);
       formData.append('photographerId', user.sub);
 

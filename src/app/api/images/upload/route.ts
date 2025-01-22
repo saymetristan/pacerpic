@@ -11,9 +11,9 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     const contentLength = req.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+    if (contentLength && parseInt(contentLength) > 25 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'Imagen demasiado grande. Máximo 10MB' },
+        { error: 'Imagen demasiado grande. Máximo 25MB' },
         { status: 413 }
       );
     }
@@ -27,23 +27,19 @@ export async function POST(req: Request) {
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
     const photographerId = formData.get('photographerId') as string;
+    const accessToken = formData.get('accessToken') as string;
 
-    if (!file || !eventId || !isValidUUID(eventId) || !photographerId) {
+    if (!file || !eventId || !photographerId) {
       return NextResponse.json(
-        { error: 'Archivo, eventId (UUID válido) y photographerId son requeridos' },
+        { error: 'Faltan campos requeridos' },
         { status: 400 }
       );
     }
 
-    const accessToken = session.accessToken;
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Token de acceso no encontrado' }, { status: 401 });
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageData = await processImage(buffer, file.name, eventId, photographerId, accessToken);
+    const result = await processImage(buffer, file.name, eventId, photographerId, accessToken);
 
-    return NextResponse.json(imageData);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error procesando imagen:', error);
     return NextResponse.json(
