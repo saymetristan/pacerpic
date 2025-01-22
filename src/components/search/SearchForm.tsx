@@ -56,7 +56,7 @@ export function SearchForm() {
       const driverObj = driver({
         showProgress: true,
         animate: true,
-        overlayColor: '#1A3068',
+        overlayColor: '#000000',
         stagePadding: 4,
         popoverClass: 'custom-popover',
         steps: [
@@ -65,7 +65,7 @@ export function SearchForm() {
             popover: {
               title: 'Selecciona tu Carrera',
               description: 'Elige el evento deportivo del que quieres ver tus fotos.',
-              side: "bottom",
+              side: "top",
               align: 'start'
             }
           },
@@ -83,7 +83,7 @@ export function SearchForm() {
             popover: {
               title: '¡Encuentra tus Fotos!',
               description: 'Haz clic aquí para ver todas las fotos donde apareces.',
-              side: "left",
+              side: "right",
               align: 'center'
             }
           },
