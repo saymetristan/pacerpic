@@ -6,6 +6,11 @@ import { supabase } from '@/lib/supabase';
 export async function POST(req: Request) {
   try {
     const session = await getSession();
+    console.log('Session:', {
+      user: session?.user?.sub,
+      accessToken: session?.accessToken ? 'Present' : 'Missing'
+    });
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -15,16 +20,23 @@ export async function POST(req: Request) {
     const eventId = formData.get('eventId') as string;
     const photographerId = formData.get('photographerId') as string;
 
+    console.log('Request data:', { eventId, photographerId, fileName: file.name });
+
     // Subir primero a storage temporal
     const buffer = Buffer.from(await file.arrayBuffer());
     const filePath = `temp/${eventId}/${Date.now()}-${file.name}`;
     
+    console.log('Intentando subir a storage temporal:', filePath);
     const { error: uploadError } = await supabase.storage
       .from('originals')
       .upload(filePath, buffer);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Error subiendo a storage:', uploadError);
+      throw uploadError;
+    }
 
+    console.log('Archivo subido exitosamente, encolando tarea');
     // Encolar tarea
     const job = await imageQueue.add({
       filePath,
@@ -41,12 +53,13 @@ export async function POST(req: Request) {
       removeOnComplete: true
     });
 
+    console.log('Tarea encolada:', job.id);
     return NextResponse.json({ jobId: job.id });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error detallado:', error);
     return NextResponse.json(
-      { error: 'Error procesando imagen' },
+      { error: 'Error procesando imagen', details: error },
       { status: 500 }
     );
   }
