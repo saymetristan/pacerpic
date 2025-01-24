@@ -1,18 +1,14 @@
 import Bull from 'bull';
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
-const redis = new Redis(process.env.UPSTASH_REDIS_REST_URL!, {
-  password: process.env.UPSTASH_REDIS_REST_TOKEN,
-  tls: { rejectUnauthorized: false }
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!
 });
 
 export const imageQueue = new Bull('image-processing', {
-  redis: {
-    port: parseInt(process.env.UPSTASH_REDIS_REST_PORT || '6379'),
-    host: process.env.UPSTASH_REDIS_REST_HOST,
-    password: process.env.UPSTASH_REDIS_REST_TOKEN,
-    tls: { rejectUnauthorized: false }
-  },
+  redis: process.env.UPSTASH_REDIS_REST_URL,
+  prefix: 'bull',
   settings: {
     lockDuration: 300000, // 5 minutos
     stalledInterval: 30000,
