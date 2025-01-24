@@ -1,7 +1,11 @@
 import { UploadProgress as UploadProgressType } from '@/types/upload';
 
 interface Props {
-  files: UploadProgressType[];
+  files: Array<{
+    fileName: string;
+    progress: number;
+    status: 'pending' | 'processing' | 'processed' | 'error' | 'queued';
+  }>;
 }
 
 export function UploadProgress({ files }: Props) {
@@ -11,11 +15,13 @@ export function UploadProgress({ files }: Props) {
         <div key={file.fileName} className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>{file.fileName}</span>
-            <span>{file.status === 'queued' ? 'En cola' : 
-                   file.status === 'processing' ? 'Procesando' :
-                   file.status === 'processed' ? 'Completado' :
-                   file.status === 'error' ? 'Error' : 
-                   `${file.progress}%`}</span>
+            <span>
+              {file.status === 'queued' ? 'En cola' :
+               file.status === 'processing' ? 'Procesando' :
+               file.status === 'processed' ? 'Completado' :
+               file.status === 'error' ? 'Error' :
+               `${file.progress}%`}
+            </span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <div 
