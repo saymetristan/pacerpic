@@ -52,11 +52,34 @@ export const maxDuration = 300;
 
 export async function GET() {
   await initializeWorker();
-  const pendingCount = await imageQueue.getWaitingCount();
-  const activeCount = await imageQueue.getActiveCount();
   
+  // Obtener estado actual de la cola
+  const [waiting, active] = await Promise.all([
+    imageQueue.getWaitingCount(),
+    imageQueue.getActiveCount()
+  ]);
+
+  // Procesar jobs pendientes si hay
+  if (waiting > 0) {
+    console.log(`🔄 Procesando ${waiting} jobs pendientes`);
+    const jobs = await imageQueue.getJobs(['waiting']);
+    jobs.forEach(job => {
+      console.log(`⚙️ Iniciando procesamiento de job ${job.id}`);
+      job.process();
+    });
+  }
+
   return new Response(
-    `Worker running. Jobs pendientes: ${pendingCount}, Jobs activos: ${activeCount}`,
-    { status: 200 }
+    JSON.stringify({
+      status: 'running',
+      jobs: {
+        waiting,
+        active
+      }
+    }),
+    { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    }
   );
 } 
