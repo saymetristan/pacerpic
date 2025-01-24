@@ -1,8 +1,10 @@
 import Bull from 'bull';
 
 const redisConfig = {
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN
+  host: process.env.UPSTASH_REDIS_REST_HOST,
+  port: parseInt(process.env.UPSTASH_REDIS_REST_PORT || '6379'),
+  password: process.env.UPSTASH_REDIS_REST_TOKEN,
+  tls: { rejectUnauthorized: false }
 };
 
 export const imageQueue = new Bull('image-processing', {
