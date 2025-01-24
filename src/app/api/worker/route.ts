@@ -20,26 +20,6 @@ function initializeWorker() {
   
   console.log('🚀 Worker iniciado');
 
-  imageQueue.on('ready', () => {
-    console.log('📦 Cola lista para procesar');
-  });
-
-  imageQueue.on('error', (error) => {
-    console.error('❌ Error en la cola:', error);
-  });
-
-  imageQueue.on('active', (job) => {
-    console.log(`⚡ Job ${job.id} iniciado`);
-  });
-
-  imageQueue.on('completed', (job) => {
-    console.log(`✅ Job ${job.id} completado`);
-  });
-
-  imageQueue.on('failed', (job, error) => {
-    console.error(`❌ Job ${job?.id} falló:`, error);
-  });
-
   imageQueue.process(async (job) => {
     const startTime = Date.now();
     console.log(`⚙️ Iniciando job ${job.id} - ${new Date().toISOString()}`);
@@ -68,7 +48,13 @@ function initializeWorker() {
         accessToken
       );
 
-      console.log('✅ Procesamiento completado');
+      console.log('🧹 Limpiando archivo temporal');
+      await supabaseAdmin.storage
+        .from('originals')
+        .remove([filePath]);
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ Job ${job.id} completado en ${duration}ms`);
       return result;
     } catch (err) {
       console.error('❌ Error en procesamiento:', err);
