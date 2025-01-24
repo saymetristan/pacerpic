@@ -15,10 +15,18 @@ const supabaseAdmin = createClient(
 
 let isWorkerInitialized = false;
 
-function initializeWorker() {
+async function initializeWorker() {
   if (isWorkerInitialized) return;
   
   console.log('🚀 Worker iniciado');
+
+  // Limpiar cualquier procesador existente
+  await imageQueue.clean(0, 'completed');
+  await imageQueue.clean(0, 'failed');
+
+  // Reiniciar el worker
+  await imageQueue.pause();
+  await imageQueue.resume();
 
   imageQueue.process(async (job) => {
     const startTime = Date.now();
@@ -48,13 +56,7 @@ function initializeWorker() {
         accessToken
       );
 
-      console.log('🧹 Limpiando archivo temporal');
-      await supabaseAdmin.storage
-        .from('originals')
-        .remove([filePath]);
-
-      const duration = Date.now() - startTime;
-      console.log(`✅ Job ${job.id} completado en ${duration}ms`);
+      console.log('✅ Procesamiento completado');
       return result;
     } catch (err) {
       console.error('❌ Error en procesamiento:', err);
@@ -67,9 +69,10 @@ function initializeWorker() {
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const preferredRegion = 'iad1';
+export const maxDuration = 300;
 
 export async function GET() {
-  initializeWorker();
-  return new Response('Worker running', { status: 200 });
+  await initializeWorker();
+  const count = await imageQueue.count();
+  return new Response(`Worker running. Jobs pendientes: ${count}`, { status: 200 });
 } 
