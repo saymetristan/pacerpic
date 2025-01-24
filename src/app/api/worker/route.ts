@@ -20,14 +20,6 @@ async function initializeWorker() {
   
   console.log('🚀 Worker iniciado');
 
-  // Limpiar cualquier procesador existente
-  await imageQueue.clean(0, 'completed');
-  await imageQueue.clean(0, 'failed');
-
-  // Reiniciar el worker
-  await imageQueue.pause();
-  await imageQueue.resume();
-
   imageQueue.process(async (job) => {
     const startTime = Date.now();
     console.log(`⚙️ Iniciando job ${job.id} - ${new Date().toISOString()}`);
@@ -46,16 +38,8 @@ async function initializeWorker() {
       }
 
       const buffer = Buffer.from(await fileData.arrayBuffer());
-      
       console.log('🔄 Procesando imagen');
-      const result = await processImage(
-        buffer,
-        fileName,
-        eventId,
-        photographerId,
-        accessToken
-      );
-
+      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
       console.log('✅ Procesamiento completado');
       return result;
     } catch (err) {
@@ -69,10 +53,9 @@ async function initializeWorker() {
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 export async function GET() {
   await initializeWorker();
-  const count = await imageQueue.count();
-  return new Response(`Worker running. Jobs pendientes: ${count}`, { status: 200 });
+  return new Response('Worker running', { status: 200 });
 } 
