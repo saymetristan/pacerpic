@@ -15,6 +15,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    // Configurar sesión de Supabase con service role
+    await supabase.auth.setSession({
+      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      refresh_token: ''
+    });
+
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
@@ -22,7 +28,18 @@ export async function POST(req: Request) {
 
     console.log('Request data:', { eventId, photographerId, fileName: file.name });
 
-    // Subir primero a storage temporal
+    // Verificar si existe el bucket
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const originalsExists = buckets?.some(b => b.name === 'originals');
+    
+    if (!originalsExists) {
+      console.log('Creando bucket originals');
+      await supabase.storage.createBucket('originals', {
+        public: false,
+        fileSizeLimit: 26214400 // 25MB
+      });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const filePath = `temp/${eventId}/${Date.now()}-${file.name}`;
     
@@ -37,7 +54,6 @@ export async function POST(req: Request) {
     }
 
     console.log('Archivo subido exitosamente, encolando tarea');
-    // Encolar tarea
     const job = await imageQueue.add({
       filePath,
       fileName: file.name,
@@ -53,7 +69,6 @@ export async function POST(req: Request) {
       removeOnComplete: true
     });
 
-    console.log('Tarea encolada:', job.id);
     return NextResponse.json({ jobId: job.id });
 
   } catch (error) {
