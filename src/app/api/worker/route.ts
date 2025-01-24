@@ -21,41 +21,42 @@ async function initializeWorker() {
   console.log('🚀 Worker iniciado');
 
   imageQueue.process(async (job) => {
-    const startTime = Date.now();
-    console.log(`⚙️ Iniciando job ${job.id} - ${new Date().toISOString()}`);
-    
+    console.log(`⚙️ Procesando job ${job.id}`);
     const { filePath, fileName, eventId, photographerId, accessToken } = job.data;
     
     try {
-      console.log('📥 Descargando archivo temporal:', filePath);
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
         .from('originals')
         .download(filePath);
 
-      if (downloadError) {
-        console.error('❌ Error descargando archivo:', downloadError);
-        throw downloadError;
-      }
+      if (downloadError) throw downloadError;
 
       const buffer = Buffer.from(await fileData.arrayBuffer());
-      console.log('🔄 Procesando imagen');
       const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
-      console.log('✅ Procesamiento completado');
+      
+      console.log(`✅ Job ${job.id} completado`);
       return result;
     } catch (err) {
-      console.error('❌ Error en procesamiento:', err);
+      console.error(`❌ Error en job ${job.id}:`, err);
       throw err;
     }
   });
 
   isWorkerInitialized = true;
+  console.log('✅ Worker listo para procesar jobs');
 }
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function GET() {
   await initializeWorker();
-  return new Response('Worker running', { status: 200 });
+  const pendingCount = await imageQueue.getWaitingCount();
+  const activeCount = await imageQueue.getActiveCount();
+  
+  return new Response(
+    `Worker running. Jobs pendientes: ${pendingCount}, Jobs activos: ${activeCount}`,
+    { status: 200 }
+  );
 } 
