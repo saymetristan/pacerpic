@@ -4,4 +4,4 @@ export interface UploadProgress {
   fileName: string;
   progress: number;
   status: UploadStatus;
-} 
+}

@@ -5,13 +5,10 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UploadProgress as UploadProgressType } from '@/types/upload';
 
 interface UploadProgressProps {
-  files: {
-    fileName: string;
-    progress: number;
-    status: 'pending' | 'processing' | 'processed' | 'error';
-  }[];
+  files: UploadProgressType[];
 }
 
 export function UploadProgress({ files }: UploadProgressProps) {
@@ -19,6 +16,7 @@ export function UploadProgress({ files }: UploadProgressProps) {
   const completed = files.filter(f => f.status === 'processed').length;
   const processing = files.filter(f => f.status === 'processing').length;
   const failed = files.filter(f => f.status === 'error').length;
+  const queued = files.filter(f => f.status === 'queued').length;
 
   return (
     <Card className="h-full">
@@ -38,7 +36,7 @@ export function UploadProgress({ files }: UploadProgressProps) {
                     <span className="truncate">{file.fileName}</span>
                   </div>
                   <Badge variant={getVariantByStatus(file.status)}>
-                    {file.progress}%
+                    {file.status === 'queued' ? 'En cola' : `${file.progress}%`}
                   </Badge>
                 </div>
                 <Progress value={file.progress} className="h-1" />
@@ -49,7 +47,9 @@ export function UploadProgress({ files }: UploadProgressProps) {
         <div className="border-t p-4 mt-auto">
           <div className="grid grid-cols-2 gap-2">
             <StatCard label="Total" value={totalFiles} className="bg-secondary/50" />
+            <StatCard label="En Cola" value={queued} className="bg-blue-500/10 text-blue-600" />
             <StatCard label="Completadas" value={completed} className="bg-green-500/10 text-green-600" />
+            <StatCard label="Errores" value={failed} className="bg-red-500/10 text-red-600" />
           </div>
         </div>
       </CardContent>

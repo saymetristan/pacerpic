@@ -4,12 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import imageCompression from 'browser-image-compression';
-
-interface UploadProgress {
-  fileName: string;
-  progress: number;
-  status: 'pending' | 'processing' | 'processed' | 'error' | 'queued';
-}
+import { UploadProgress } from '@/types/upload';
 
 export function useImages() {
   const { user } = useUser();
