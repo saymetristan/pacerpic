@@ -59,14 +59,9 @@ export async function GET() {
     imageQueue.getActiveCount()
   ]);
 
-  // Procesar jobs pendientes si hay
+  // Forzar procesamiento de jobs pendientes
   if (waiting > 0) {
-    console.log(`🔄 Procesando ${waiting} jobs pendientes`);
-    const jobs = await imageQueue.getJobs(['waiting']);
-    jobs.forEach(job => {
-      console.log(`⚙️ Iniciando procesamiento de job ${job.id}`);
-      job.process();
-    });
+    console.log(`🔄 ${waiting} jobs pendientes por procesar`);
   }
 
   return new Response(
