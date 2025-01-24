@@ -1,7 +1,18 @@
 import { imageQueue } from '@/lib/queue';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 export async function POST(req: Request) {
   try {
@@ -16,10 +27,21 @@ export async function POST(req: Request) {
     }
 
     // Configurar sesión de Supabase con service role
-    await supabase.auth.setSession({
+    await supabaseAdmin.auth.setSession({
       access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
       refresh_token: ''
     });
+
+    const { data: { session: supaSession }, error: sessionError } = await supabaseAdmin.auth.getSession();
+    console.log('Supabase Session:', {
+      role: supaSession?.user?.role,
+      id: supaSession?.user?.id
+    });
+
+    if (sessionError || !supaSession) {
+      console.error('Error estableciendo sesión:', sessionError);
+      throw new Error('Error estableciendo sesión de Supabase');
+    }
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
@@ -29,12 +51,12 @@ export async function POST(req: Request) {
     console.log('Request data:', { eventId, photographerId, fileName: file.name });
 
     // Verificar si existe el bucket
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
     const originalsExists = buckets?.some(b => b.name === 'originals');
     
     if (!originalsExists) {
       console.log('Creando bucket originals');
-      await supabase.storage.createBucket('originals', {
+      await supabaseAdmin.storage.createBucket('originals', {
         public: false,
         fileSizeLimit: 26214400 // 25MB
       });
@@ -44,7 +66,7 @@ export async function POST(req: Request) {
     const filePath = `temp/${eventId}/${Date.now()}-${file.name}`;
     
     console.log('Intentando subir a storage temporal:', filePath);
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from('originals')
       .upload(filePath, buffer);
 
