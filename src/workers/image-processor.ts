@@ -1,36 +1,48 @@
 import { imageQueue } from '@/lib/queue';
 import { processImage } from '@/lib/image-processing';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
+console.log('🚀 Worker iniciado');
+
+imageQueue.on('ready', () => {
+  console.log('📦 Cola lista para procesar');
+});
+
+imageQueue.on('error', (error) => {
+  console.error('❌ Error en la cola:', error);
+});
 
 imageQueue.process(async (job) => {
+  const startTime = Date.now();
+  console.log(`⚙️ Iniciando job ${job.id} - ${new Date().toISOString()}`);
+  
   const { filePath, fileName, eventId, photographerId, accessToken } = job.data;
   
-  console.log('Iniciando procesamiento:', {
-    filePath,
-    eventId,
-    photographerId
-  });
-
   try {
-    console.log('Configurando sesión de Supabase');
-    await supabase.auth.setSession({
-      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      refresh_token: ''
-    });
-
-    console.log('Descargando archivo temporal');
-    const { data: fileData, error: downloadError } = await supabase.storage
+    console.log('📥 Descargando archivo temporal:', filePath);
+    const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('originals')
       .download(filePath);
 
     if (downloadError) {
-      console.error('Error descargando archivo:', downloadError);
+      console.error('❌ Error descargando archivo:', downloadError);
       throw downloadError;
     }
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
     
-    console.log('Procesando imagen');
+    console.log('🔄 Procesando imagen');
     const result = await processImage(
       buffer,
       fileName,
@@ -39,15 +51,16 @@ imageQueue.process(async (job) => {
       accessToken
     );
 
-    console.log('Limpiando archivo temporal');
-    await supabase.storage
+    console.log('🧹 Limpiando archivo temporal');
+    await supabaseAdmin.storage
       .from('originals')
       .remove([filePath]);
 
-    console.log('Procesamiento completado');
+    const duration = Date.now() - startTime;
+    console.log(`✅ Job ${job.id} completado en ${duration}ms`);
     return result;
   } catch (err) {
-    console.error('Error detallado en procesamiento:', err);
+    console.error(`❌ Error en job ${job.id}:`, err);
     throw err;
   }
 });
