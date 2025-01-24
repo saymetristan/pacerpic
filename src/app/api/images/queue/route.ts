@@ -26,23 +26,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Configurar sesión de Supabase con service role
-    await supabaseAdmin.auth.setSession({
-      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      refresh_token: ''
-    });
-
-    const { data: { session: supaSession }, error: sessionError } = await supabaseAdmin.auth.getSession();
-    console.log('Supabase Session:', {
-      role: supaSession?.user?.role,
-      id: supaSession?.user?.id
-    });
-
-    if (sessionError || !supaSession) {
-      console.error('Error estableciendo sesión:', sessionError);
-      throw new Error('Error estableciendo sesión de Supabase');
-    }
-
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
