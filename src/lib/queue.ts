@@ -1,13 +1,14 @@
 import Bull from 'bull';
-import { Redis } from '@upstash/redis';
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!
-});
 
 export const imageQueue = new Bull('image-processing', {
-  redis: process.env.UPSTASH_REDIS_REST_URL,
+  redis: {
+    port: 0,
+    host: process.env.UPSTASH_REDIS_REST_URL!,
+    password: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    tls: {
+      rejectUnauthorized: false
+    }
+  },
   prefix: 'bull',
   settings: {
     lockDuration: 300000, // 5 minutos
@@ -21,15 +22,23 @@ export const imageQueue = new Bull('image-processing', {
   }
 });
 
-// Manejo de eventos
+// Manejo de eventos con más logs
+imageQueue.on('active', (job) => {
+  console.log(`⚙️ Job ${job.id} iniciando procesamiento`);
+});
+
 imageQueue.on('completed', (job) => {
-  console.log(`Job ${job.id} completado`);
+  console.log(`✅ Job ${job.id} completado exitosamente`);
 });
 
 imageQueue.on('failed', (job, err) => {
-  console.error(`Job ${job.id} falló:`, err);
+  console.error(`❌ Job ${job.id} falló:`, err);
 });
 
 imageQueue.on('stalled', (job) => {
-  console.warn(`Job ${job.id} estancado`);
+  console.warn(`⚠️ Job ${job.id} estancado`);
+});
+
+imageQueue.on('error', (error) => {
+  console.error('❌ Error en la cola:', error);
 });
