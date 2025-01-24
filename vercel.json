@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/worker": {
+    "src/app/api/worker/route.ts": {
       "memory": 1024,
       "maxDuration": 300
     }
