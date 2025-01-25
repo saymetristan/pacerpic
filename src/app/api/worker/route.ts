@@ -79,15 +79,23 @@ export async function GET() {
     imageQueue.getActiveCount()
   ]);
 
-  // Forzar procesamiento de jobs pendientes
   if (waiting > 0) {
     console.log(`🔄 ${waiting} jobs pendientes por procesar`);
     const jobs = await imageQueue.getJobs(['waiting']);
     for (const job of jobs) {
       try {
-        await job.promote();
+        await imageQueue.process(async () => {
+          return await processImage(
+            job.data.buffer,
+            job.data.fileName,
+            job.data.eventId,
+            job.data.photographerId,
+            job.data.accessToken,
+            job
+          );
+        });
       } catch (err) {
-        console.error(`Error promoviendo job ${job.id}:`, err);
+        console.error(`Error procesando job ${job.id}:`, err);
       }
     }
   }
@@ -97,9 +105,6 @@ export async function GET() {
       status: 'running',
       jobs: { waiting, active }
     }),
-    { 
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    }
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 } 
