@@ -162,30 +162,38 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const originalPath = `${eventId}/${fileName}`;
     const compressedPath = `${eventId}/${fileName}`;
     
-    await job?.progress(80);
-    
-    // Subir original
+    // Subir original con CDN headers
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: true,
+        cacheControl: '31536000',
+        customMetadata: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'CDN-Cache-Control': 'public, max-age=31536000, immutable'
+        }
       });
     if (originalError) throw originalError;
 
-    // Subir comprimida
+    // Subir comprimida con CDN headers
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: true,
+        cacheControl: '31536000',
+        customMetadata: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'CDN-Cache-Control': 'public, max-age=31536000, immutable'
+        }
       });
     if (compressedError) throw compressedError;
 
-    // Construir URLs directas con transformación
-    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}?width=2048&quality=80`;
-    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}?width=1024&quality=60`;
+    // Construir URLs con CDN
+    const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalUrl = `${cdnUrl}/storage/v1/object/public/originals/${originalPath}`;
+    const compressedUrl = `${cdnUrl}/storage/v1/object/public/compressed/${compressedPath}`;
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase

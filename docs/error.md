@@ -150,6 +150,41 @@ Desventajas:
 
 ❌ No funcionó: No resolvió el problema de cache key
 
+## 12. CDN con Cache Control Inmutable
+
+```typescript
+// Subir con headers CDN
+const { error } = await supabase.storage
+  .from('bucket')
+  .upload(path, file, {
+    cacheControl: '31536000',
+    customMetadata: {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'CDN-Cache-Control': 'public, max-age=31536000, immutable'
+    }
+  });
+
+// Usar URL CDN directa
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+const url = `${cdnUrl}/storage/v1/object/public/bucket/${path}`;
+```
+
+La idea es:
+1. Configurar cache control a nivel de CDN
+2. Marcar archivos como inmutables
+3. Usar URLs directas sin parámetros
+
+Ventajas:
+- Evita problemas de caché usando CDN
+- Mejor rendimiento con archivos inmutables
+- URLs más limpias
+
+Desventajas:
+- Requiere configuración de CDN
+- Los archivos no se pueden modificar
+
+⏳ Estado: En prueba
+
 ## Aprendizajes
 1. El error parece estar relacionado con cómo Supabase maneja el caché internamente
 2. Las soluciones de URLs firmadas o públicas no resuelven el problema
