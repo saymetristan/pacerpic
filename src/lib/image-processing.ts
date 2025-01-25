@@ -163,46 +163,41 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const compressedPath = `${eventId}/${fileName}`;
     
     await job?.progress(80);
-
-    // Asegurar que los buckets existan y sean públicos
-    await supabase.storage.createBucket('originals', {
-      public: true,
-      allowedMimeTypes: ['image/jpeg'],
-      fileSizeLimit: 52428800
-    }).catch(() => {}); // Ignorar error si ya existe
-
-    await supabase.storage.createBucket('compressed', {
-      public: true,
-      allowedMimeTypes: ['image/jpeg'],
-      fileSizeLimit: 52428800
-    }).catch(() => {});
     
     // Subir original
-    const { data: originalData, error: originalError } = await supabase.storage
+    const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        duplex: 'half',
         upsert: true
       });
     if (originalError) throw originalError;
 
+    // Verificar que podemos descargar el archivo (esto genera el caché)
+    const { data: originalDownload } = await supabase.storage
+      .from('originals')
+      .download(originalPath);
+
     // Subir comprimida
-    const { data: compressedData, error: compressedError } = await supabase.storage
+    const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        duplex: 'half',
         upsert: true
       });
     if (compressedError) throw compressedError;
 
-    // Construir URLs manualmente
+    // Verificar que podemos descargar el archivo (esto genera el caché)
+    const { data: compressedDownload } = await supabase.storage
+      .from('compressed')
+      .download(compressedPath);
+
+    // Construir URLs usando el bucket público
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}`;
     const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}`;
 
-    // 6. Registrar en BD con URLs completas
+    // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
