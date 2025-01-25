@@ -162,6 +162,9 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const originalPath = `${eventId}/${fileName}`;
     const compressedPath = `${eventId}/${fileName}`;
     
+    await job?.progress(80);
+    
+    // Primero subimos la imagen original
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
@@ -172,6 +175,10 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       throw originalError;
     }
 
+    // Esperamos un momento para que se propague
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Luego subimos la comprimida
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
@@ -181,6 +188,9 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     if (compressedError) {
       throw compressedError;
     }
+
+    // Otra pequeña espera
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
