@@ -45,7 +45,14 @@ async function initializeWorker() {
       await job.progress(25);
       
       console.log('🔄 Iniciando processImage...');
-      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken, job);
+      const result = await processImage(
+        filePath,
+        fileName,
+        eventId,
+        photographerId,
+        accessToken,
+        job
+      );
       
       await job.progress(90);
       
@@ -85,7 +92,7 @@ export async function GET() {
         try {
           // Procesar directamente sin crear nuevo job
           const result = await processImage(
-            job.data.buffer,
+            job.data.filePath,
             job.data.fileName,
             job.data.eventId,
             job.data.photographerId,
