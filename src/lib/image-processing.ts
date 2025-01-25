@@ -163,35 +163,53 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const compressedPath = `${eventId}/${fileName}`;
     
     await job?.progress(80);
+
+    // Asegurar que los buckets existan y sean públicos
+    await supabase.storage.createBucket('originals', {
+      public: true,
+      allowedMimeTypes: ['image/jpeg'],
+      fileSizeLimit: 52428800
+    }).catch(() => {}); // Ignorar error si ya existe
+
+    await supabase.storage.createBucket('compressed', {
+      public: true,
+      allowedMimeTypes: ['image/jpeg'],
+      fileSizeLimit: 52428800
+    }).catch(() => {});
     
     // Subir original
-    const { error: originalError } = await supabase.storage
+    const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
-        cacheControl: '0',
-        upsert: true,
-        contentType: 'image/jpeg'
+        contentType: 'image/jpeg',
+        duplex: 'half',
+        upsert: true
       });
     if (originalError) throw originalError;
 
     // Subir comprimida
-    const { error: compressedError } = await supabase.storage
+    const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
-        cacheControl: '0',
-        upsert: true,
-        contentType: 'image/jpeg'
+        contentType: 'image/jpeg',
+        duplex: 'half',
+        upsert: true
       });
     if (compressedError) throw compressedError;
 
-    // 6. Registrar en BD solo con paths
+    // Construir URLs manualmente
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}`;
+    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}`;
+
+    // 6. Registrar en BD con URLs completas
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalPath,
-        compressed_url: compressedPath,
+        original_url: originalUrl,
+        compressed_url: compressedUrl,
         status: 'processed'
       })
       .select()
