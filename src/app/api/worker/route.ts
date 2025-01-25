@@ -81,13 +81,17 @@ export async function GET() {
 
   if (waiting > 0) {
     console.log(`🔄 ${waiting} jobs pendientes por procesar`);
-    const jobs = await imageQueue.getJobs(['waiting']);
+    const jobs = await imageQueue.getJobs(['waiting', 'failed']);
     for (const job of jobs) {
       try {
         await imageQueue.add(job.data, {
           jobId: job.id,
           removeOnComplete: true,
-          attempts: 3
+          attempts: 2,
+          backoff: {
+            type: 'fixed',
+            delay: 5000
+          }
         });
       } catch (err) {
         console.error(`Error procesando job ${job.id}:`, err);

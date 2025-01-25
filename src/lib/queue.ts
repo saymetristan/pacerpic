@@ -19,12 +19,10 @@ export const imageQueue = new Bull('image-processing', {
   },
   prefix: 'bull',
   settings: {
-    lockDuration: 600000,        // 10 minutos
-    stalledInterval: 60000,      // 1 minuto
-    maxStalledCount: 2,
-    retryProcessDelay: 10000,    // 10 segundos
-    lockRenewTime: 30000,        // 30 segundos
-    drainDelay: 5000            // 5 segundos
+    lockDuration: 300000,        // 5 minutos
+    stalledInterval: 30000,      // 30 segundos
+    maxStalledCount: 1,          // Solo 1 intento si se estanca
+    retryProcessDelay: 5000      // 5 segundos entre reintentos
   },
   limiter: {
     max: 1,
@@ -53,7 +51,8 @@ imageQueue.on('failed', (job, err) => {
 
 imageQueue.on('stalled', (job) => {
   console.warn(`⚠️ Job ${job.id} estancado`);
-  job.retry().catch(console.error);
+  // En lugar de retry, lo movemos a failed
+  job.moveToFailed(new Error('Job estancado')).catch(console.error);
 });
 
 imageQueue.on('error', (error) => {
