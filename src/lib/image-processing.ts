@@ -162,8 +162,6 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const originalPath = `${eventId}/${fileName}`;
     const compressedPath = `${eventId}/${fileName}`;
     
-    await job?.progress(80);
-    
     // Primero subimos la imagen original
     const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
@@ -171,9 +169,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         cacheControl: '3600',
         upsert: true
       });
-    if (originalError) {
-      throw originalError;
-    }
+    if (originalError) throw originalError;
 
     // Luego subimos la comprimida
     const { data: compressedData, error: compressedError } = await supabase.storage
@@ -182,18 +178,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         cacheControl: '3600',
         upsert: true
       });
-    if (compressedError) {
-      throw compressedError;
-    }
-
-    // Obtener URLs públicas
-    const { data: { publicUrl: originalUrl } } = supabase.storage
-      .from('originals')
-      .getPublicUrl(originalPath);
-      
-    const { data: { publicUrl: compressedUrl } } = supabase.storage
-      .from('compressed')
-      .getPublicUrl(compressedPath);
+    if (compressedError) throw compressedError;
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase

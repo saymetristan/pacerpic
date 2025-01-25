@@ -73,9 +73,9 @@ async function initializeWorker() {
         .from('originals')
         .remove([filePath]);
       
-      // Completar job correctamente
-      await job.moveToCompleted(result);
+      // Completar job sin moveToCompleted
       await job.progress(100);
+      console.log(`✅ Job ${job.id} completado:`, result);
       
       return result;
     } catch (err) {
