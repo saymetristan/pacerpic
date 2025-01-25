@@ -168,11 +168,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
-        cacheControl: '31536000',
-        customMetadata: {
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'CDN-Cache-Control': 'public, max-age=31536000, immutable'
-        }
+        cacheControl: 'public, max-age=31536000, immutable'
       });
     if (originalError) throw originalError;
 
@@ -182,11 +178,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .upload(compressedPath, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
-        cacheControl: '31536000',
-        customMetadata: {
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'CDN-Cache-Control': 'public, max-age=31536000, immutable'
-        }
+        cacheControl: 'public, max-age=31536000, immutable'
       });
     if (compressedError) throw compressedError;
 
