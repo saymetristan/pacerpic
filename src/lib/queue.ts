@@ -41,11 +41,13 @@ imageQueue.on('completed', (job, result) => {
 
 imageQueue.on('failed', (job, err) => {
   console.error(`❌ Job ${job.id} falló:`, err);
+  // Solo reintentamos si falló
+  job.retry().catch(console.error);
 });
 
 imageQueue.on('stalled', (job) => {
-  console.warn(`⚠️ Job ${job.id} estancado, reintentando...`);
-  job.retry();
+  console.warn(`⚠️ Job ${job.id} estancado`);
+  // No reintentamos aquí, dejamos que Bull maneje los stalled jobs
 });
 
 imageQueue.on('error', (error) => {
