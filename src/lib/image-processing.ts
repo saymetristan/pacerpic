@@ -163,7 +163,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const compressedPath = `${eventId}/${fileName}`;
     
     await job?.progress(80);
-
+    
     // Subir original
     const { error: originalError } = await supabase.storage
       .from('originals')
@@ -182,37 +182,19 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       });
     if (compressedError) throw compressedError;
 
-    // Obtener URLs pre-firmadas con transformación
-    const { data: originalSigned } = await supabase.storage
-      .from('originals')
-      .createSignedUrl(originalPath, 31536000, {
-        transform: {
-          width: 2048,
-          height: 1365,
-          format: 'origin',
-          quality: 80
-        }
-      });
+    // Construir URLs directas con transformación
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}?width=2048&quality=80`;
+    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}?width=1024&quality=60`;
 
-    const { data: compressedSigned } = await supabase.storage
-      .from('compressed')
-      .createSignedUrl(compressedPath, 31536000, {
-        transform: {
-          width: 1024,
-          height: 682,
-          format: 'origin',
-          quality: 60
-        }
-      });
-
-    // 6. Registrar en BD usando URLs transformadas
+    // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalSigned?.signedUrl,
-        compressed_url: compressedSigned?.signedUrl,
+        original_url: originalUrl,
+        compressed_url: compressedUrl,
         status: 'processed'
       })
       .select()

@@ -148,7 +148,7 @@ Desventajas:
 - URLs más largas
 - Depende del servicio de transformación
 
-⏳ Estado: En prueba
+❌ No funcionó: No resolvió el problema de cache key
 
 ## Aprendizajes
 1. El error parece estar relacionado con cómo Supabase maneja el caché internamente
