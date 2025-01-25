@@ -96,9 +96,17 @@ export async function GET() {
     const promises = jobs.map(job => 
       new Promise(async (resolve) => {
         try {
-          // Procesar directamente sin crear nuevo job
+          const downloadResult = await supabaseAdmin.storage
+            .from('originals')
+            .download(job.data.filePath);
+
+          if (!downloadResult.data) {
+            throw new Error('No se pudo descargar el archivo');
+          }
+
+          const buffer = Buffer.from(await downloadResult.data.arrayBuffer());
           const result = await processImage(
-            job.data.filePath,
+            buffer,
             job.data.fileName,
             job.data.eventId,
             job.data.photographerId,
