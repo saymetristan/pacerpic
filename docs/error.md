@@ -116,6 +116,38 @@ Desventajas:
 - Las URLs son menos limpias
 - Puede causar recargas innecesarias en algunos casos
 
+❌ No funcionó: No resolvió el problema de cache key
+
+## 10. URLs Pre-firmadas con Transformación
+
+```typescript
+// Obtener URL pre-firmada con transformación
+const { data } = await supabase.storage
+  .from('bucket')
+  .createSignedUrl(path, 31536000, {
+    transform: {
+      width: 2048,
+      format: 'jpg',
+      quality: 80
+    }
+  });
+```
+
+La idea es:
+1. Usar URLs pre-firmadas pero con transformación
+2. Evitar el caché usando la transformación de imagen
+3. Las URLs son válidas por 1 año
+4. La transformación genera una nueva versión del archivo
+
+Ventajas:
+- Evita problemas de caché usando transformación
+- URLs optimizadas automáticamente
+- No requiere manejo manual de caché
+
+Desventajas:
+- URLs más largas
+- Depende del servicio de transformación
+
 ⏳ Estado: En prueba
 
 ## Aprendizajes

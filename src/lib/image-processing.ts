@@ -163,49 +163,56 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const compressedPath = `${eventId}/${fileName}`;
     
     await job?.progress(80);
-    
-    // Subir original con metadata
+
+    // Subir original
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true,
-        duplex: 'half',
-        metadata: {
-          'cache-control': 'max-age=31536000',
-          'content-type': 'image/jpeg'
-        }
+        upsert: true
       });
     if (originalError) throw originalError;
 
-    // Subir comprimida con metadata
+    // Subir comprimida
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true,
-        duplex: 'half',
-        metadata: {
-          'cache-control': 'max-age=31536000',
-          'content-type': 'image/jpeg'
-        }
+        upsert: true
       });
     if (compressedError) throw compressedError;
 
-    // Construir URLs con timestamp para evitar caché
-    const timestamp = Date.now();
-    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}?v=${timestamp}`;
-    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}?v=${timestamp}`;
+    // Obtener URLs pre-firmadas con transformación
+    const { data: originalSigned } = await supabase.storage
+      .from('originals')
+      .createSignedUrl(originalPath, 31536000, {
+        transform: {
+          width: 2048,
+          height: 1365,
+          format: 'jpg',
+          quality: 80
+        }
+      });
 
-    // 6. Registrar en BD
+    const { data: compressedSigned } = await supabase.storage
+      .from('compressed')
+      .createSignedUrl(compressedPath, 31536000, {
+        transform: {
+          width: 1024,
+          height: 682,
+          format: 'jpg',
+          quality: 60
+        }
+      });
+
+    // 6. Registrar en BD usando URLs transformadas
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalUrl,
-        compressed_url: compressedUrl,
+        original_url: originalSigned?.signedUrl,
+        compressed_url: compressedSigned?.signedUrl,
         status: 'processed'
       })
       .select()
