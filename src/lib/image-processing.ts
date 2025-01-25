@@ -173,11 +173,6 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       });
     if (originalError) throw originalError;
 
-    // Verificar que podemos descargar el archivo (esto genera el caché)
-    const { data: originalDownload } = await supabase.storage
-      .from('originals')
-      .download(originalPath);
-
     // Subir comprimida
     const { error: compressedError } = await supabase.storage
       .from('compressed')
@@ -187,17 +182,12 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       });
     if (compressedError) throw compressedError;
 
-    // Verificar que podemos descargar el archivo (esto genera el caché)
-    const { data: compressedDownload } = await supabase.storage
-      .from('compressed')
-      .download(compressedPath);
+    // Transformar URLs usando CDN de Supabase
+    const cdnUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('.supabase.co', '.supabase.in');
+    const originalUrl = `${cdnUrl}/storage/v1/object/public/originals/${originalPath}`;
+    const compressedUrl = `${cdnUrl}/storage/v1/object/public/compressed/${compressedPath}`;
 
-    // Construir URLs usando el bucket público
-    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}`;
-    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}`;
-
-    // 6. Registrar en BD
+    // 6. Registrar en BD con URLs del CDN
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({

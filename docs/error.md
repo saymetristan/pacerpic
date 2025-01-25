@@ -48,7 +48,43 @@ await supabase.storage.createBucket('bucket', {
   allowedMimeTypes: ['image/jpeg']
 })
 ```
-⏳ En prueba: Última solución implementada
+❌ No funcionó: No resolvió el problema de cache key
+
+## 7. Forzar Generación de Caché con Download
+
+// Subir archivo
+const { error } = await supabase.storage
+  .from('bucket')
+  .upload(path, file, {
+    contentType: 'image/jpeg',
+    upsert: true
+  });
+
+// Forzar generación de caché
+const { data } = await supabase.storage
+  .from('bucket')
+  .download(path);
+
+// Construir URL pública
+const url = `${baseUrl}/storage/v1/object/public/bucket/${path}`;
+```
+
+La idea es:
+1. Subir el archivo normalmente sin opciones de caché
+2. Forzar una descarga inmediata para que Supabase genere el caché
+3. Usar la URL pública después de asegurarnos que el caché existe
+
+Ventajas:
+- No depende de URLs firmadas
+- No requiere configuración especial de buckets
+- Fuerza la generación del caché antes de usar la URL
+
+Desventajas:
+- Requiere una operación adicional (download)
+- Puede aumentar ligeramente el tiempo de procesamiento
+
+❌ No funcionó: No resolvió el problema de cache key
+
 
 ## Aprendizajes
 1. El error parece estar relacionado con cómo Supabase maneja el caché internamente
