@@ -162,32 +162,41 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const originalPath = `${eventId}/${fileName}`;
     const compressedPath = `${eventId}/${fileName}`;
     
-    // Primero subimos la imagen original
+    await job?.progress(80);
+    
+    // Subir original
     const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         cacheControl: '3600',
-        upsert: true
+        upsert: true,
+        contentType: 'image/jpeg'
       });
     if (originalError) throw originalError;
 
-    // Luego subimos la comprimida
+    // Subir comprimida
     const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         cacheControl: '3600',
-        upsert: true
+        upsert: true,
+        contentType: 'image/jpeg'
       });
     if (compressedError) throw compressedError;
 
-    // 6. Registrar en BD
+    // Construir URLs manualmente
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}`;
+    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}`;
+
+    // 6. Registrar en BD con URLs completas
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalPath,
-        compressed_url: compressedPath,
+        original_url: originalUrl,
+        compressed_url: compressedUrl,
         status: 'processed'
       })
       .select()
