@@ -46,17 +46,10 @@ imageQueue.on('completed', (job, result) => {
 imageQueue.on('failed', async (job, err) => {
   console.error(`❌ Job ${job.id} falló:`, err);
   try {
-    await job.moveToFailed(err);
     await job.retry();
   } catch (retryError) {
     console.error(`Error retrying job ${job.id}:`, retryError);
   }
-});
-
-imageQueue.on('stalled', (job) => {
-  console.warn(`⚠️ Job ${job.id} estancado`);
-  // En lugar de retry, lo movemos a failed
-  job.moveToFailed(new Error('Job estancado')).catch(console.error);
 });
 
 imageQueue.on('error', (error) => {

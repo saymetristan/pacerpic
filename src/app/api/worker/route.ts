@@ -65,15 +65,10 @@ async function initializeWorker() {
         job
       );
       
-      await job.progress(90);
-      console.log('✅ Job completado:', result);
-      
-      // Marcar el job como completado explícitamente
-      await job.moveToCompleted(result, true);
+      await job.progress(100);
       return result;
     } catch (err) {
-      // Marcar el job como fallido explícitamente
-      await job.moveToFailed(err as Error);
+      console.error(`Error procesando job ${job.id}:`, err);
       throw err;
     }
   });
@@ -115,11 +110,9 @@ export async function GET() {
             job.data.accessToken,
             job
           );
-          await job.moveToCompleted(result);
           resolve(true);
         } catch (err) {
           console.error(`Error procesando job ${job.id}:`, err);
-          await job.moveToFailed({ message: err instanceof Error ? err.message : String(err) });
           resolve(false);
         }
       })
