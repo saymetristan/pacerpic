@@ -90,8 +90,8 @@ export async function processImage(
       ? (is169 ? WATERMARK_VERTICAL169 : WATERMARK_VERTICAL)
       : (is169 ? WATERMARK_HORIZONTAL169 : WATERMARK_HORIZONTAL);
 
-    // Usar la misma imagen para IA y procesamiento
-    const processedBuffer = await sharp(file)
+    // Procesar imagen para IA primero
+    const processedBufferForAI = await sharp(file)
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();
@@ -99,7 +99,7 @@ export async function processImage(
     await job?.progress(30);
 
     // Procesar con OpenAI usando la imagen procesada
-    const base64AI = processedBuffer.toString('base64');
+    const base64AI = processedBufferForAI.toString('base64');
     const aiResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -145,7 +145,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     await job?.progress(50);
 
-    // Aplicar marca de agua
+    // Aplicar marca de agua sobre imagen original
     const wmResponse = await fetch(watermarkUrl);
     const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
     const resizedWM = await sharp(watermarkBuf)
@@ -156,7 +156,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .png()
       .toBuffer();
 
-    const finalImageWithWM = await sharp(processedBuffer)
+    const finalImageWithWM = await sharp(file)
       .composite([{ 
         input: resizedWM, 
         gravity: 'center',
