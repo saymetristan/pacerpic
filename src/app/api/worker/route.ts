@@ -66,9 +66,10 @@ async function initializeWorker() {
       );
       
       await job.progress(100);
+      await job.moveToCompleted(JSON.stringify(result));
       return result;
     } catch (err) {
-      console.error(`Error procesando job ${job.id}:`, err);
+      await job.moveToFailed({message: err instanceof Error ? err.message : String(err)});
       throw err;
     }
   });

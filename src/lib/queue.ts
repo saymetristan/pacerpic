@@ -39,17 +39,14 @@ imageQueue.on('progress', (job, progress) => {
   console.log(`📊 Job ${job.id} progreso:`, progress);
 });
 
-imageQueue.on('completed', (job, result) => {
-  console.log(`✅ Job ${job.id} completado:`, result);
+imageQueue.on('completed', async (job) => {
+  await job.moveToCompleted(job.returnvalue);
+  await job.remove();
 });
 
 imageQueue.on('failed', async (job, err) => {
   console.error(`❌ Job ${job.id} falló:`, err);
-  try {
-    await job.retry();
-  } catch (retryError) {
-    console.error(`Error retrying job ${job.id}:`, retryError);
-  }
+  await job.moveToFailed({message: err instanceof Error ? err.message : String(err)});
 });
 
 imageQueue.on('error', (error) => {
