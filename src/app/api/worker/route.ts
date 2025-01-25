@@ -82,26 +82,37 @@ export async function GET() {
   if (waiting > 0) {
     console.log(`🔄 ${waiting} jobs pendientes por procesar`);
     const jobs = await imageQueue.getJobs(['waiting', 'failed']);
-    for (const job of jobs) {
-      try {
-        await imageQueue.add(job.data, {
-          jobId: job.id,
-          removeOnComplete: true,
-          attempts: 2,
-          backoff: {
-            type: 'fixed',
-            delay: 5000
-          }
-        });
-      } catch (err) {
-        console.error(`Error procesando job ${job.id}:`, err);
-      }
-    }
+    
+    // Procesar todos los jobs y esperar a que terminen
+    const promises = jobs.map(job => 
+      new Promise(async (resolve) => {
+        try {
+          await imageQueue.add(job.data, {
+            jobId: job.id,
+            removeOnComplete: true,
+            attempts: 2,
+            backoff: {
+              type: 'fixed',
+              delay: 5000
+            }
+          });
+          
+          // Esperar a que el job termine
+          await job.finished();
+          resolve(true);
+        } catch (err) {
+          console.error(`Error procesando job ${job.id}:`, err);
+          resolve(false);
+        }
+      })
+    );
+
+    await Promise.all(promises);
   }
 
   return new Response(
     JSON.stringify({
-      status: 'running',
+      status: 'completed',
       jobs: { waiting, active }
     }),
     { status: 200 }
