@@ -158,9 +158,10 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     await job?.progress(80);
 
-    // 5. Subir a buckets (ejemplo: bucket originals y compressed)
-    const originalPath = `originals/${eventId}/${fileName}`;
-    const compressedPath = `compressed/${eventId}/${fileName}`;
+    // 5. Subir a buckets
+    const originalPath = `${eventId}/${fileName}`;
+    const compressedPath = `${eventId}/${fileName}`;
+    
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {

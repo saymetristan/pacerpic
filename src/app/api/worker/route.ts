@@ -69,6 +69,11 @@ async function initializeWorker() {
       
       await job.progress(100);
       console.log(`✅ Job ${job.id} completado`);
+      
+      await supabaseAdmin.storage
+        .from('originals')
+        .remove([filePath]);
+      
       return result;
     } catch (err) {
       console.error(`❌ Error en job ${job.id}:`, err);
