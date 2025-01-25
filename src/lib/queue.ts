@@ -1,17 +1,10 @@
 import Bull from 'bull';
 
-// Limpiamos la URL de Redis
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '');
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN!;
 
 export const imageQueue = new Bull('image-processing', {
-  redis: {
-    port: 6379,
-    host: REDIS_URL,
-    password: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    tls: {
-      rejectUnauthorized: false
-    }
-  },
+  redis: `rediss://:${REDIS_TOKEN}@${REDIS_URL}:6379?ssl_cert_reqs=none`,
   prefix: 'bull',
   settings: {
     lockDuration: 300000,
@@ -25,7 +18,7 @@ export const imageQueue = new Bull('image-processing', {
   }
 });
 
-// Eventos para debugging
+// Mantenemos los mismos eventos
 imageQueue.on('active', (job) => {
   console.log(`⚙️ Job ${job.id} iniciando procesamiento`);
 });
