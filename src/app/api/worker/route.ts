@@ -34,6 +34,11 @@ async function initializeWorker() {
       const buffer = Buffer.from(await fileData.arrayBuffer());
       const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
       
+      // Limpiar archivo temporal después del procesamiento
+      await supabaseAdmin.storage
+        .from('originals')
+        .remove([filePath]);
+      
       console.log(`✅ Job ${job.id} completado`);
       return result;
     } catch (err) {

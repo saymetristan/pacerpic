@@ -19,10 +19,14 @@ export const imageQueue = new Bull('image-processing', {
   },
   prefix: 'bull',
   settings: {
-    lockDuration: 300000,
+    lockDuration: 600000,
     stalledInterval: 30000,
     maxStalledCount: 3,
     retryProcessDelay: 5000
+  },
+  limiter: {
+    max: 1,
+    duration: 60000
   }
 });
 
