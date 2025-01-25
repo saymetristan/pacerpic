@@ -84,15 +84,10 @@ export async function GET() {
     const jobs = await imageQueue.getJobs(['waiting']);
     for (const job of jobs) {
       try {
-        await imageQueue.process(async () => {
-          return await processImage(
-            job.data.buffer,
-            job.data.fileName,
-            job.data.eventId,
-            job.data.photographerId,
-            job.data.accessToken,
-            job
-          );
+        await imageQueue.add(job.data, {
+          jobId: job.id,
+          removeOnComplete: true,
+          attempts: 3
         });
       } catch (err) {
         console.error(`Error procesando job ${job.id}:`, err);
@@ -105,6 +100,6 @@ export async function GET() {
       status: 'running',
       jobs: { waiting, active }
     }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
+    { status: 200 }
   );
 } 
