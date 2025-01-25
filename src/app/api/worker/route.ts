@@ -68,18 +68,12 @@ async function initializeWorker() {
       await job.progress(90);
       console.log('✅ Job completado:', result);
       
-      // Limpiar archivo temporal
-      await supabaseAdmin.storage
-        .from('originals')
-        .remove([filePath]);
-      
-      // Completar job sin moveToCompleted
-      await job.progress(100);
-      console.log(`✅ Job ${job.id} completado:`, result);
-      
+      // Marcar el job como completado explícitamente
+      await job.moveToCompleted(result, true);
       return result;
     } catch (err) {
-      console.error(`❌ Error en job ${job.id}:`, err);
+      // Marcar el job como fallido explícitamente
+      await job.moveToFailed(err as Error);
       throw err;
     }
   });
