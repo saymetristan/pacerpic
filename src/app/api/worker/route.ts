@@ -109,19 +109,27 @@ export async function GET() {
       })
     );
 
-    await Promise.allSettled(promises);
-  }
+    const results = await Promise.allSettled(promises);
+    const failed = results.filter(r => r.status === 'rejected').length;
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
 
-  const [waiting, active] = await Promise.all([
-    imageQueue.getWaitingCount(),
-    imageQueue.getActiveCount()
-  ]);
+    return new Response(
+      JSON.stringify({ 
+        status: 'completed',
+        processed: jobs.length,
+        succeeded,
+        failed,
+        jobs: { waiting: imageQueue.getWaitingCount(), active: imageQueue.getActiveCount() }
+      }),
+      { status: 200 }
+    );
+  }
 
   return new Response(
     JSON.stringify({ 
       status: 'completed',
-      processed: jobs.length,
-      jobs: { waiting, active }
+      processed: 0,
+      jobs: { waiting: imageQueue.getWaitingCount(), active: imageQueue.getActiveCount() }
     }),
     { status: 200 }
   );

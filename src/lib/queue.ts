@@ -43,10 +43,14 @@ imageQueue.on('completed', (job, result) => {
   console.log(`✅ Job ${job.id} completado:`, result);
 });
 
-imageQueue.on('failed', (job, err) => {
+imageQueue.on('failed', async (job, err) => {
   console.error(`❌ Job ${job.id} falló:`, err);
-  // Solo reintentamos si falló
-  job.retry().catch(console.error);
+  try {
+    await job.moveToFailed(err);
+    await job.retry();
+  } catch (retryError) {
+    console.error(`Error retrying job ${job.id}:`, retryError);
+  }
 });
 
 imageQueue.on('stalled', (job) => {
