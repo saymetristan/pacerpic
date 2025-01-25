@@ -52,8 +52,9 @@ async function initializeWorker() {
       // Validar que sea una imagen
       try {
         await sharp(buffer).metadata();
-      } catch (err) {
-        throw new Error(`Formato de imagen no válido: ${err.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`Formato de imagen no válido: ${message}`);
       }
       
       await job.progress(25);
