@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { imageQueue } from '@/lib/queue';
 import { processImage } from '@/lib/image-processing';
+import sharp from 'sharp';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,8 +44,16 @@ async function initializeWorker() {
       const buffer = Buffer.from(await downloadResult.data.arrayBuffer());
       console.log('Buffer size:', buffer.length, 'bytes');
       
-      if (!Buffer.isBuffer(buffer)) {
-        throw new Error('Buffer inválido después de la conversión');
+      // Validar tamaño mínimo del buffer
+      if (buffer.length < 1000) { // Una imagen real debería ser más grande
+        throw new Error(`Buffer demasiado pequeño (${buffer.length} bytes)`);
+      }
+      
+      // Validar que sea una imagen
+      try {
+        await sharp(buffer).metadata();
+      } catch (err) {
+        throw new Error(`Formato de imagen no válido: ${err.message}`);
       }
       
       await job.progress(25);
