@@ -45,7 +45,7 @@ async function initializeWorker() {
       await job.progress(25);
       
       console.log('🔄 Iniciando processImage...');
-      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
+      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken, job);
       
       await job.progress(90);
       
