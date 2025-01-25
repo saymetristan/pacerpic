@@ -41,6 +41,11 @@ async function initializeWorker() {
 
       console.log('✅ Archivo descargado, convirtiendo a buffer...');
       const buffer = Buffer.from(await downloadResult.data.arrayBuffer());
+      console.log('Buffer size:', buffer.length, 'bytes');
+      
+      if (!Buffer.isBuffer(buffer)) {
+        throw new Error('Buffer inválido después de la conversión');
+      }
       
       await job.progress(25);
       
