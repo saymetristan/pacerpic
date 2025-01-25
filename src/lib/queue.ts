@@ -1,6 +1,10 @@
 import Bull from 'bull';
 import { Redis } from '@upstash/redis';
 
+// Extraer el host real de la URL
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL!;
+const host = REDIS_URL.replace('https://', '').split('/')[0];
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!
@@ -8,7 +12,7 @@ const redis = new Redis({
 
 export const imageQueue = new Bull('image-processing', {
   redis: {
-    host: process.env.UPSTASH_REDIS_REST_URL!,
+    host,
     port: 6379,
     password: process.env.UPSTASH_REDIS_REST_TOKEN!,
     tls: { rejectUnauthorized: false }
