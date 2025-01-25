@@ -68,7 +68,8 @@ export async function processImage(
     await job?.progress(10);
 
     console.log('🔄 Generando copia para IA...');
-    const aiCopyBuffer = await sharp(file, { failOnError: false })
+    const image = sharp(file);
+    const aiCopyBuffer = await image
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();

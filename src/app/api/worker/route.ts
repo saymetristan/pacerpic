@@ -44,14 +44,10 @@ async function initializeWorker() {
       const buffer = Buffer.from(await downloadResult.data.arrayBuffer());
       console.log('Buffer size:', buffer.length, 'bytes');
       
-      // Validar tamaño mínimo del buffer
-      if (buffer.length < 1000) { // Una imagen real debería ser más grande
-        throw new Error(`Buffer demasiado pequeño (${buffer.length} bytes)`);
-      }
-      
-      // Validar que sea una imagen
+      // Validar que sea una imagen usando sharp
       try {
-        await sharp(buffer).metadata();
+        const metadata = await sharp(buffer).metadata();
+        console.log('Metadata:', metadata);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         throw new Error(`Formato de imagen no válido: ${message}`);
