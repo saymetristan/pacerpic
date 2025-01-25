@@ -21,6 +21,7 @@ import Masonry from 'react-masonry-css';
 interface EventImage {
   id: string;
   original_url: string;
+  compressed_url: string;
   created_at: string;
   dorsals: {
     number: string;
@@ -177,7 +178,7 @@ export default function EventGalleryPage() {
                     <div className="relative w-full">
                       <Image
                         src={image.original_url}
-                        alt="Foto del evento"
+                        alt={`Foto del evento ${event?.name}`}
                         width={500}
                         height={500}
                         className="w-full h-auto"
