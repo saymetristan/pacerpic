@@ -7,17 +7,18 @@ const redis = new Redis({
 });
 
 export const imageQueue = new Bull('image-processing', {
-  createClient: () => redis as any,
+  redis: {
+    host: process.env.UPSTASH_REDIS_REST_URL!,
+    port: 6379,
+    password: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    tls: { rejectUnauthorized: false }
+  },
   prefix: 'bull',
   settings: {
     lockDuration: 300000,
     stalledInterval: 30000,
     maxStalledCount: 3,
     retryProcessDelay: 5000
-  },
-  limiter: {
-    max: 1000,
-    duration: 5000
   }
 });
 

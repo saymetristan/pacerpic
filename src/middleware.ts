@@ -15,9 +15,19 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
     }
   }
 
+  // Activar worker si es una petición a queue
+  if (req.nextUrl.pathname.startsWith('/api/images/queue')) {
+    fetch(`${req.nextUrl.origin}/api/worker`, {
+      method: 'GET',
+      headers: {
+        'x-worker-activation': 'internal'
+      }
+    }).catch(console.error);
+  }
+
   return res;
 });
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/images/upload']
+  matcher: ['/admin/:path*', '/api/images/upload', '/api/images/queue/:path*']
 }; 
