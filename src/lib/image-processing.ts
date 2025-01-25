@@ -164,7 +164,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     
     await job?.progress(80);
     
-    // Subir original
+    // Subir original y obtener URL pública inmediatamente
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
@@ -174,7 +174,11 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       });
     if (originalError) throw originalError;
 
-    // Subir comprimida
+    const { data: { publicUrl: originalUrl } } = supabase.storage
+      .from('originals')
+      .getPublicUrl(originalPath);
+
+    // Subir comprimida y obtener URL pública
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
@@ -184,23 +188,18 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       });
     if (compressedError) throw compressedError;
 
-    // Generar URLs firmadas
-    const { data: originalSignedData } = await supabase.storage
-      .from('originals')
-      .createSignedUrl(originalPath, 31536000); // 1 año
-
-    const { data: compressedSignedData } = await supabase.storage
+    const { data: { publicUrl: compressedUrl } } = supabase.storage
       .from('compressed')
-      .createSignedUrl(compressedPath, 31536000);
+      .getPublicUrl(compressedPath);
 
-    // 6. Registrar en BD con URLs firmadas
+    // 6. Registrar en BD con paths relativos
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalSignedData?.signedUrl,
-        compressed_url: compressedSignedData?.signedUrl,
+        original_url: originalPath,
+        compressed_url: compressedPath,
         status: 'processed'
       })
       .select()
