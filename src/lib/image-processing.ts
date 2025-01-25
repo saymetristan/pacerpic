@@ -149,12 +149,19 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const wmResponse = await fetch(watermarkUrl);
     const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
     const resizedWM = await sharp(watermarkBuf)
-      .resize(width, height, { fit: 'fill' })
+      .resize(width, height, { 
+        fit: 'contain',
+        withoutEnlargement: true
+      })
       .png()
       .toBuffer();
 
     const finalImageWithWM = await sharp(processedBuffer)
-      .composite([{ input: resizedWM, gravity: 'center' }])
+      .composite([{ 
+        input: resizedWM, 
+        gravity: 'center',
+        blend: 'over'
+      }])
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer();
 
