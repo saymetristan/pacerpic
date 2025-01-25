@@ -74,54 +74,48 @@ export const maxDuration = 300;
 export async function GET() {
   await initializeWorker();
   
-  const [waiting, active] = await Promise.all([
-    imageQueue.getWaitingCount(),
-    imageQueue.getActiveCount()
-  ]);
-
-  if (waiting > 0) {
-    console.log(`🔄 ${waiting} jobs pendientes por procesar`);
-    const jobs = await imageQueue.getJobs(['waiting', 'failed']);
+  // Forzar procesamiento de jobs pendientes
+  const jobs = await imageQueue.getJobs(['waiting', 'failed', 'delayed']);
+  
+  if (jobs.length > 0) {
+    console.log(`🔄 Procesando ${jobs.length} jobs pendientes...`);
     
     const promises = jobs.map(job => 
       new Promise(async (resolve) => {
         try {
-          // Limpiar job anterior
-          await job.remove();
-          
-          // Crear nuevo job
-          const newJob = await imageQueue.add(job.data, {
-            removeOnComplete: true,
-            attempts: 2,
-            backoff: {
-              type: 'fixed',
-              delay: 5000
-            }
-          });
-          
-          // Esperar máximo 5 minutos
-          const timeout = setTimeout(() => resolve(false), 300000);
-          
-          newJob.finished().then(() => {
-            clearTimeout(timeout);
-            resolve(true);
-          }).catch(() => {
-            clearTimeout(timeout);
-            resolve(false);
-          });
-          
+          // Procesar directamente sin crear nuevo job
+          const result = await processImage(
+            job.data.buffer,
+            job.data.fileName,
+            job.data.eventId,
+            job.data.photographerId,
+            job.data.accessToken,
+            job
+          );
+          await job.moveToCompleted(result);
+          resolve(true);
         } catch (err) {
           console.error(`Error procesando job ${job.id}:`, err);
+          await job.moveToFailed({ message: err instanceof Error ? err.message : String(err) });
           resolve(false);
         }
       })
     );
 
-    await Promise.all(promises);
+    await Promise.allSettled(promises);
   }
 
+  const [waiting, active] = await Promise.all([
+    imageQueue.getWaitingCount(),
+    imageQueue.getActiveCount()
+  ]);
+
   return new Response(
-    JSON.stringify({ status: 'completed', jobs: { waiting, active } }),
+    JSON.stringify({ 
+      status: 'completed',
+      processed: jobs.length,
+      jobs: { waiting, active }
+    }),
     { status: 200 }
   );
 } 
