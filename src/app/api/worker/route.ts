@@ -26,35 +26,26 @@ async function initializeWorker() {
     
     try {
       console.log('📥 Descargando archivo:', filePath);
-      const { data: fileData, error: downloadError } = await Promise.race([
-        supabaseAdmin.storage
-          .from('originals')
-          .download(filePath),
-        new Promise<{data: null, error: Error}>((_, reject) => 
-          setTimeout(() => reject({
-            data: null, 
-            error: new Error('Timeout descargando archivo')
-          }), 30000)
-        )
-      ]);
+      const downloadResult = await supabaseAdmin.storage
+        .from('originals')
+        .download(filePath);
 
-      if (downloadError) {
-        console.error('❌ Error descargando archivo:', downloadError);
-        throw downloadError;
+      if (downloadResult.error) {
+        console.error('❌ Error descargando archivo:', downloadResult.error);
+        throw downloadResult.error;
+      }
+
+      if (!downloadResult.data) {
+        throw new Error('No se pudo descargar el archivo');
       }
 
       console.log('✅ Archivo descargado, convirtiendo a buffer...');
-      const buffer = Buffer.from(await fileData.arrayBuffer());
+      const buffer = Buffer.from(await downloadResult.data.arrayBuffer());
       
       await job.progress(25);
       
       console.log('🔄 Iniciando processImage...');
-      const result = await Promise.race([
-        processImage(buffer, fileName, eventId, photographerId, accessToken),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout procesando imagen')), 240000)
-        )
-      ]);
+      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
       
       await job.progress(90);
       
