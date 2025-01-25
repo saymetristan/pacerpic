@@ -1,9 +1,12 @@
 import Bull from 'bull';
 
+// Limpiamos la URL de Redis
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '');
+
 export const imageQueue = new Bull('image-processing', {
   redis: {
-    port: 0,
-    host: process.env.UPSTASH_REDIS_REST_URL!,
+    port: 6379,
+    host: REDIS_URL,
     password: process.env.UPSTASH_REDIS_REST_TOKEN!,
     tls: {
       rejectUnauthorized: false
@@ -11,18 +14,18 @@ export const imageQueue = new Bull('image-processing', {
   },
   prefix: 'bull',
   settings: {
-    lockDuration: 300000, // 5 minutos
+    lockDuration: 300000,
     stalledInterval: 30000,
     maxStalledCount: 3,
     retryProcessDelay: 5000
   },
   limiter: {
-    max: 1000, // máximo de trabajos por intervalo
-    duration: 5000 // intervalo en ms
+    max: 1000,
+    duration: 5000
   }
 });
 
-// Manejo de eventos con más logs
+// Eventos para debugging
 imageQueue.on('active', (job) => {
   console.log(`⚙️ Job ${job.id} iniciando procesamiento`);
 });
