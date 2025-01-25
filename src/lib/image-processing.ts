@@ -20,9 +20,15 @@ export async function processImage(
   try {
     console.log('🔄 Iniciando procesamiento de imagen:', fileName);
     
-    // Verificar buffer
+    // Verificar buffer y formato
     if (!file || file.length === 0) {
       throw new Error('Buffer inválido');
+    }
+    
+    try {
+      await sharp(file).metadata();
+    } catch (err) {
+      throw new Error('Formato de imagen no válido');
     }
     console.log('✅ Buffer verificado:', file.length, 'bytes');
 

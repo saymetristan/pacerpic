@@ -2,6 +2,7 @@ import { imageQueue } from '@/lib/queue';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,6 +47,17 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    
+    // Validar que sea una imagen válida
+    try {
+      await sharp(buffer).metadata();
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Formato de imagen no válido' },
+        { status: 400 }
+      );
+    }
+    
     const filePath = `temp/${eventId}/${Date.now()}-${file.name}`;
     
     console.log('Intentando subir a storage temporal:', filePath);
