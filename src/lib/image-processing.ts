@@ -164,35 +164,27 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     
     await job?.progress(80);
     
-    // Subir original y obtener URL pública inmediatamente
+    // Subir original
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
-        cacheControl: '3600',
+        cacheControl: '0',
         upsert: true,
         contentType: 'image/jpeg'
       });
     if (originalError) throw originalError;
 
-    const { data: { publicUrl: originalUrl } } = supabase.storage
-      .from('originals')
-      .getPublicUrl(originalPath);
-
-    // Subir comprimida y obtener URL pública
+    // Subir comprimida
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
-        cacheControl: '3600',
+        cacheControl: '0',
         upsert: true,
         contentType: 'image/jpeg'
       });
     if (compressedError) throw compressedError;
 
-    const { data: { publicUrl: compressedUrl } } = supabase.storage
-      .from('compressed')
-      .getPublicUrl(compressedPath);
-
-    // 6. Registrar en BD con paths relativos
+    // 6. Registrar en BD solo con paths
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
