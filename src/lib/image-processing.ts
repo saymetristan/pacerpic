@@ -15,7 +15,7 @@ export async function processImage(
   eventId: string, 
   photographerId: string,
   accessToken: string,
-  job: Job
+  job?: Job
 ) {
   try {
     console.log('🔄 Iniciando procesamiento de imagen:', fileName);
@@ -65,7 +65,7 @@ export async function processImage(
       refresh_token: '',
     });
 
-    await job.progress(10);
+    await job?.progress(10);
 
     console.log('🔄 Generando copia para IA...');
     const aiCopyBuffer = await sharp(file)
@@ -74,7 +74,7 @@ export async function processImage(
       .toBuffer();
     console.log('✅ Copia para IA generada');
 
-    await job.progress(20);
+    await job?.progress(20);
 
     // 2. Procesar con OpenAI
     const base64AI = aiCopyBuffer.toString('base64');
@@ -121,7 +121,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       dorsal_number: []
     };
 
-    await job.progress(40);
+    await job?.progress(40);
 
     // 3. Comprimir imagen original a <5MB (ajustar calidad si quieres más control)
     let compressedOriginal = await sharp(file)
@@ -133,7 +133,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         .toBuffer();
     }
 
-    await job.progress(60);
+    await job?.progress(60);
 
     // 4. Detectar orientación y aplicar watermark
     const meta = await sharp(compressedOriginal).metadata();
@@ -150,7 +150,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer();
 
-    await job.progress(80);
+    await job?.progress(80);
 
     // 5. Subir a buckets (ejemplo: bucket originals y compressed)
     const originalPath = `originals/${eventId}/${fileName}`;
