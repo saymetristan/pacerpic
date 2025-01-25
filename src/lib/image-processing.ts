@@ -189,7 +189,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         transform: {
           width: 2048,
           height: 1365,
-          format: 'jpg',
+          format: 'origin',
           quality: 80
         }
       });
@@ -200,7 +200,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         transform: {
           width: 1024,
           height: 682,
-          format: 'jpg',
+          format: 'origin',
           quality: 60
         }
       });
