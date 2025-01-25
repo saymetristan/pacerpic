@@ -40,6 +40,7 @@ imageQueue.on('progress', (job, progress) => {
 });
 
 imageQueue.on('completed', async (job) => {
+  console.log(`✅ Job ${job.id} completado y limpiado`);
   await job.moveToCompleted(job.returnvalue);
   await job.remove();
 });

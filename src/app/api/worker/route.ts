@@ -66,9 +66,15 @@ async function initializeWorker() {
       );
       
       await job.progress(100);
+      console.log('✅ Proceso completado exitosamente:', {
+        jobId: job.id,
+        fileName,
+        eventId
+      });
       await job.moveToCompleted(JSON.stringify(result));
       return result;
     } catch (err) {
+      console.error('❌ Error en el proceso:', err);
       await job.moveToFailed({message: err instanceof Error ? err.message : String(err)});
       throw err;
     }
