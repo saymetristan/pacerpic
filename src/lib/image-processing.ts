@@ -16,6 +16,8 @@ export async function processImage(
   accessToken: string
 ) {
   try {
+    console.log('🔄 Iniciando procesamiento de imagen:', fileName);
+    
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -27,6 +29,7 @@ export async function processImage(
       }
     );
 
+    console.log('🔍 Verificando usuario:', photographerId);
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role,id')
@@ -34,9 +37,12 @@ export async function processImage(
       .single();
 
     if (!user || userError) {
+      console.error('❌ Error de autenticación:', userError);
       throw new Error('Error de autenticación');
     }
 
+    console.log('✅ Usuario verificado, procesando imagen...');
+    
     supabase.auth.setSession({
       access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
       refresh_token: '',
@@ -174,6 +180,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     return { ...newImage, dorsals };
   } catch (err) {
+    console.error('❌ Error en processImage:', err);
     throw err;
   }
 }

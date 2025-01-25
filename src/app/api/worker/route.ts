@@ -25,16 +25,23 @@ async function initializeWorker() {
     const { filePath, fileName, eventId, photographerId, accessToken } = job.data;
     
     try {
+      console.log('📥 Descargando archivo:', filePath);
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
         .from('originals')
         .download(filePath);
 
-      if (downloadError) throw downloadError;
+      if (downloadError) {
+        console.error('❌ Error descargando archivo:', downloadError);
+        throw downloadError;
+      }
 
+      console.log('✅ Archivo descargado, convirtiendo a buffer...');
       const buffer = Buffer.from(await fileData.arrayBuffer());
+      
+      console.log('🔄 Iniciando processImage...');
       const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
       
-      // Limpiar archivo temporal después del procesamiento
+      console.log('🧹 Limpiando archivo temporal...');
       await supabaseAdmin.storage
         .from('originals')
         .remove([filePath]);
