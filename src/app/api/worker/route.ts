@@ -74,7 +74,6 @@ export const maxDuration = 300;
 export async function GET() {
   await initializeWorker();
   
-  // Obtener estado actual de la cola
   const [waiting, active] = await Promise.all([
     imageQueue.getWaitingCount(),
     imageQueue.getActiveCount()
@@ -83,15 +82,20 @@ export async function GET() {
   // Forzar procesamiento de jobs pendientes
   if (waiting > 0) {
     console.log(`🔄 ${waiting} jobs pendientes por procesar`);
+    const jobs = await imageQueue.getJobs(['waiting']);
+    for (const job of jobs) {
+      try {
+        await job.promote();
+      } catch (err) {
+        console.error(`Error promoviendo job ${job.id}:`, err);
+      }
+    }
   }
 
   return new Response(
     JSON.stringify({
       status: 'running',
-      jobs: {
-        waiting,
-        active
-      }
+      jobs: { waiting, active }
     }),
     { 
       status: 200,
