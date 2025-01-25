@@ -20,15 +20,23 @@ async function initializeWorker() {
   
   console.log('🚀 Worker iniciado');
 
-  imageQueue.process(async (job) => {
+  imageQueue.process(1, async (job) => {
     console.log(`⚙️ Procesando job ${job.id}`);
     const { filePath, fileName, eventId, photographerId, accessToken } = job.data;
     
     try {
       console.log('📥 Descargando archivo:', filePath);
-      const { data: fileData, error: downloadError } = await supabaseAdmin.storage
-        .from('originals')
-        .download(filePath);
+      const { data: fileData, error: downloadError } = await Promise.race([
+        supabaseAdmin.storage
+          .from('originals')
+          .download(filePath),
+        new Promise<{data: null, error: Error}>((_, reject) => 
+          setTimeout(() => reject({
+            data: null, 
+            error: new Error('Timeout descargando archivo')
+          }), 30000)
+        )
+      ]);
 
       if (downloadError) {
         console.error('❌ Error descargando archivo:', downloadError);
@@ -38,14 +46,24 @@ async function initializeWorker() {
       console.log('✅ Archivo descargado, convirtiendo a buffer...');
       const buffer = Buffer.from(await fileData.arrayBuffer());
       
+      await job.progress(25);
+      
       console.log('🔄 Iniciando processImage...');
-      const result = await processImage(buffer, fileName, eventId, photographerId, accessToken);
+      const result = await Promise.race([
+        processImage(buffer, fileName, eventId, photographerId, accessToken),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout procesando imagen')), 240000)
+        )
+      ]);
+      
+      await job.progress(90);
       
       console.log('🧹 Limpiando archivo temporal...');
       await supabaseAdmin.storage
         .from('originals')
         .remove([filePath]);
       
+      await job.progress(100);
       console.log(`✅ Job ${job.id} completado`);
       return result;
     } catch (err) {
