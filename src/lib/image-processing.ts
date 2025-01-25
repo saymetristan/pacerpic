@@ -68,8 +68,7 @@ export async function processImage(
     await job?.progress(10);
 
     console.log('🔄 Generando copia para IA...');
-    const image = sharp(file);
-    const aiCopyBuffer = await image
+    const aiCopyBuffer = await sharp(Buffer.from(file))
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();
@@ -125,11 +124,11 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     await job?.progress(40);
 
     // 3. Comprimir imagen original a <5MB (ajustar calidad si quieres más control)
-    let compressedOriginal = await sharp(file)
+    let compressedOriginal = await sharp(Buffer.from(file))
       .jpeg({ quality: 85, chromaSubsampling: '4:2:0', mozjpeg: true })
       .toBuffer();
     while (compressedOriginal.byteLength > 5 * 1024 * 1024) {
-      compressedOriginal = await sharp(compressedOriginal)
+      compressedOriginal = await sharp(Buffer.from(compressedOriginal))
         .jpeg({ quality: 75, chromaSubsampling: '4:2:0', mozjpeg: true })
         .toBuffer();
     }
