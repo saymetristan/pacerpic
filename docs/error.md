@@ -1,4 +1,3 @@
-```markdown
 # Intentos de Solución: Failed to Generate Cache Key
 
 ## 1. URLs Firmadas
@@ -85,6 +84,39 @@ Desventajas:
 
 ❌ No funcionó: No resolvió el problema de cache key
 
+## 9. Manejo Manual de Caché con Timestamps
+
+```typescript
+// Subir con metadata específica
+const { error } = await supabase.storage
+  .from('bucket')
+  .upload(path, file, {
+    metadata: {
+      'cache-control': 'max-age=31536000',
+      'content-type': 'image/jpeg'
+    }
+  });
+
+// Construir URL con timestamp
+const timestamp = Date.now();
+const url = `${baseUrl}/storage/v1/object/public/bucket/${path}?v=${timestamp}`;
+```
+
+La idea es:
+1. Establecer metadata específica al subir
+2. Agregar timestamp a las URLs para forzar bypass de caché
+3. Usar duplex: 'half' para mejorar la gestión de streams
+
+Ventajas:
+- Evita problemas de caché a nivel de URL
+- Mantiene el caché del servidor para rendimiento
+- No requiere operaciones adicionales
+
+Desventajas:
+- Las URLs son menos limpias
+- Puede causar recargas innecesarias en algunos casos
+
+⏳ Estado: En prueba
 
 ## Aprendizajes
 1. El error parece estar relacionado con cómo Supabase maneja el caché internamente

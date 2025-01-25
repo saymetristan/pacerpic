@@ -164,30 +164,41 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     
     await job?.progress(80);
     
-    // Subir original
+    // Subir original con metadata
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: true,
+        duplex: 'half',
+        metadata: {
+          'cache-control': 'max-age=31536000',
+          'content-type': 'image/jpeg'
+        }
       });
     if (originalError) throw originalError;
 
-    // Subir comprimida
+    // Subir comprimida con metadata
     const { error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: true,
+        duplex: 'half',
+        metadata: {
+          'cache-control': 'max-age=31536000',
+          'content-type': 'image/jpeg'
+        }
       });
     if (compressedError) throw compressedError;
 
-    // Transformar URLs usando CDN de Supabase
-    const cdnUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('.supabase.co', '.supabase.in');
-    const originalUrl = `${cdnUrl}/storage/v1/object/public/originals/${originalPath}`;
-    const compressedUrl = `${cdnUrl}/storage/v1/object/public/compressed/${compressedPath}`;
+    // Construir URLs con timestamp para evitar caché
+    const timestamp = Date.now();
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalUrl = `${baseUrl}/storage/v1/object/public/originals/${originalPath}?v=${timestamp}`;
+    const compressedUrl = `${baseUrl}/storage/v1/object/public/compressed/${compressedPath}?v=${timestamp}`;
 
-    // 6. Registrar en BD con URLs del CDN
+    // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
