@@ -8,6 +8,8 @@ const openai = new OpenAI({
 });
 const WATERMARK_VERTICAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcoVerticalv2.png';
 const WATERMARK_HORIZONTAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcoHorizontalv2.png';
+const WATERMARK_HORIZONTAL169 = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcohorizontal169.png'
+const WATERMARK_VERTICAL169 = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcovertical169.png'
 
 export async function processImage(
   file: Buffer, 
@@ -73,17 +75,31 @@ export async function processImage(
 
     await job?.progress(10);
 
-    console.log('🔄 Generando copia para IA...');
-    const aiCopyBuffer = await sharp(Buffer.from(file))
+    // Obtener metadata para detectar relación de aspecto
+    const meta = await sharp(file).metadata();
+    const width = meta.width || 0;
+    const height = meta.height || 0;
+    const aspectRatio = width / height;
+
+    // Determinar orientación y relación de aspecto
+    const isVertical = height > width;
+    const is169 = Math.abs(aspectRatio - 16/9) < Math.abs(aspectRatio - 4/3);
+    
+    // Seleccionar watermark adecuado
+    const watermarkUrl = isVertical 
+      ? (is169 ? WATERMARK_VERTICAL169 : WATERMARK_VERTICAL)
+      : (is169 ? WATERMARK_HORIZONTAL169 : WATERMARK_HORIZONTAL);
+
+    // Usar la misma imagen para IA y procesamiento
+    const processedBuffer = await sharp(file)
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();
-    console.log('✅ Copia para IA generada');
 
-    await job?.progress(20);
+    await job?.progress(30);
 
-    // 2. Procesar con OpenAI
-    const base64AI = aiCopyBuffer.toString('base64');
+    // Procesar con OpenAI usando la imagen procesada
+    const base64AI = processedBuffer.toString('base64');
     const aiResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -127,55 +143,37 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       dorsal_number: []
     };
 
-    await job?.progress(40);
+    await job?.progress(50);
 
-    // 3. Comprimir imagen original a <5MB (ajustar calidad si quieres más control)
-    let compressedOriginal = await sharp(Buffer.from(file))
-      .jpeg({ quality: 85, chromaSubsampling: '4:2:0', mozjpeg: true })
-      .toBuffer();
-    while (compressedOriginal.byteLength > 5 * 1024 * 1024) {
-      compressedOriginal = await sharp(Buffer.from(compressedOriginal))
-        .jpeg({ quality: 75, chromaSubsampling: '4:2:0', mozjpeg: true })
-        .toBuffer();
-    }
-
-    await job?.progress(60);
-
-    // 4. Detectar orientación y aplicar watermark
-    const meta = await sharp(compressedOriginal).metadata();
-    const isVertical = (meta.height || 0) > (meta.width || 0);
-    const watermarkUrl = isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL;
+    // Aplicar marca de agua
     const wmResponse = await fetch(watermarkUrl);
     const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
     const resizedWM = await sharp(watermarkBuf)
-      .resize(meta.width, meta.height, { fit: 'fill' })
+      .resize(width, height, { fit: 'fill' })
       .png()
       .toBuffer();
-    const finalImageWithWM = await sharp(compressedOriginal)
+
+    const finalImageWithWM = await sharp(processedBuffer)
       .composite([{ input: resizedWM, gravity: 'center' }])
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer();
 
-    await job?.progress(80);
+    await job?.progress(70);
 
-    // 5. Subir a buckets con transformación previa
-    const originalPath = `${eventId}/${fileName}`;
-    const compressedPath = `${eventId}/${fileName}`;
-    
-    // Transformar antes de subir
-    const originalBuffer = await sharp(finalImageWithWM)
-      .jpeg({ quality: 80 })
-      .toBuffer();
-      
+    // Generar versión comprimida para preview
     const compressedBuffer = await sharp(finalImageWithWM)
       .resize(1024, null, { fit: 'inside' })
       .jpeg({ quality: 60 })
       .toBuffer();
 
+    // 5. Subir a buckets con transformación previa
+    const originalPath = `${eventId}/${fileName}`;
+    const compressedPath = `${eventId}/${fileName}`;
+    
     // Subir versiones pre-transformadas
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, originalBuffer, {
+      .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
         cacheControl: 'public, max-age=31536000'

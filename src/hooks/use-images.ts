@@ -14,8 +14,19 @@ export function useImages() {
   const uploadEventImage = async (file: File, eventId: string) => {
     if (!user?.sub) throw new Error('Usuario no autenticado');
 
+    // Comprimir imagen si es muy grande
+    let compressedFile = file;
+    if (file.size > 5 * 1024 * 1024) {
+      const options = {
+        maxSizeMB: 5,
+        maxWidthOrHeight: 4096,
+        useWebWorker: true
+      };
+      compressedFile = await imageCompression(file, options);
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', compressedFile);
     formData.append('eventId', eventId);
     formData.append('photographerId', user.sub);
 
