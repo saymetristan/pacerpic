@@ -183,11 +183,11 @@ Desventajas:
 - Requiere configuración de CDN
 - Los archivos no se pueden modificar
 
+❌ No funcionó: No resolvió el problema de cache key
+
+## 13. Pre-transformación y URLs Directas
+
+La idea es transformar las imágenes antes de subirlas, evitando así la necesidad de transformación y caché en tiempo real.
+
 ⏳ Estado: En prueba
 
-## Aprendizajes
-1. El error parece estar relacionado con cómo Supabase maneja el caché internamente
-2. Las soluciones de URLs firmadas o públicas no resuelven el problema
-3. El problema persiste incluso con buckets públicos
-4. La configuración de cache control no afecta al error
-5. El error ocurre al intentar acceder a las imágenes, no al subirlas

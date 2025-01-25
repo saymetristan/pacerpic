@@ -158,34 +158,47 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     await job?.progress(80);
 
-    // 5. Subir a buckets
+    // 5. Subir a buckets con transformación previa
     const originalPath = `${eventId}/${fileName}`;
     const compressedPath = `${eventId}/${fileName}`;
     
-    // Subir original con CDN headers
+    // Transformar antes de subir
+    const originalBuffer = await sharp(finalImageWithWM)
+      .jpeg({ quality: 80 })
+      .toBuffer();
+      
+    const compressedBuffer = await sharp(finalImageWithWM)
+      .resize(1024, null, { fit: 'inside' })
+      .jpeg({ quality: 60 })
+      .toBuffer();
+
+    // Subir versiones pre-transformadas
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, finalImageWithWM, {
+      .upload(originalPath, originalBuffer, {
         contentType: 'image/jpeg',
         upsert: true,
-        cacheControl: 'public, max-age=31536000, immutable'
+        cacheControl: 'public, max-age=31536000'
       });
     if (originalError) throw originalError;
 
-    // Subir comprimida con CDN headers
     const { error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, finalImageWithWM, {
+      .upload(compressedPath, compressedBuffer, {
         contentType: 'image/jpeg',
         upsert: true,
-        cacheControl: 'public, max-age=31536000, immutable'
+        cacheControl: 'public, max-age=31536000'
       });
     if (compressedError) throw compressedError;
 
-    // Construir URLs con CDN
-    const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const originalUrl = `${cdnUrl}/storage/v1/object/public/originals/${originalPath}`;
-    const compressedUrl = `${cdnUrl}/storage/v1/object/public/compressed/${compressedPath}`;
+    // Obtener URLs públicas directas
+    const { data: { publicUrl: originalUrl } } = supabase.storage
+      .from('originals')
+      .getPublicUrl(originalPath);
+      
+    const { data: { publicUrl: compressedUrl } } = supabase.storage
+      .from('compressed')
+      .getPublicUrl(compressedPath);
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
