@@ -66,13 +66,16 @@ async function initializeWorker() {
       );
       
       await job.progress(90);
+      console.log('✅ Job completado:', result);
       
-      await job.progress(100);
-      console.log(`✅ Job ${job.id} completado`);
-      
+      // Limpiar archivo temporal
       await supabaseAdmin.storage
         .from('originals')
         .remove([filePath]);
+      
+      // Completar job correctamente
+      await job.moveToCompleted(result);
+      await job.progress(100);
       
       return result;
     } catch (err) {

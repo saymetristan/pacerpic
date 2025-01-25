@@ -165,7 +165,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     await job?.progress(80);
     
     // Primero subimos la imagen original
-    const { error: originalError } = await supabase.storage
+    const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         cacheControl: '3600',
@@ -175,11 +175,8 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       throw originalError;
     }
 
-    // Esperamos un momento para que se propague
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     // Luego subimos la comprimida
-    const { error: compressedError } = await supabase.storage
+    const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, finalImageWithWM, {
         cacheControl: '3600',
@@ -189,8 +186,14 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       throw compressedError;
     }
 
-    // Otra pequeña espera
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Obtener URLs públicas
+    const { data: { publicUrl: originalUrl } } = supabase.storage
+      .from('originals')
+      .getPublicUrl(originalPath);
+      
+    const { data: { publicUrl: compressedUrl } } = supabase.storage
+      .from('compressed')
+      .getPublicUrl(compressedPath);
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
