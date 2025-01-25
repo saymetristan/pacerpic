@@ -18,6 +18,12 @@ export async function processImage(
   try {
     console.log('🔄 Iniciando procesamiento de imagen:', fileName);
     
+    // Verificar buffer
+    if (!file || file.length === 0) {
+      throw new Error('Buffer inválido');
+    }
+    console.log('✅ Buffer verificado:', file.length, 'bytes');
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -28,6 +34,15 @@ export async function processImage(
         }
       }
     );
+
+    // Verificar conexión a Supabase
+    try {
+      await supabase.auth.getSession();
+      console.log('✅ Conexión a Supabase OK');
+    } catch (err) {
+      console.error('❌ Error conectando a Supabase:', err);
+      throw err;
+    }
 
     console.log('🔍 Verificando usuario:', photographerId);
     const { data: user, error: userError } = await supabase
@@ -48,11 +63,12 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // 1. Generar copia 1300x1300 para OpenAI
+    console.log('🔄 Generando copia para IA...');
     const aiCopyBuffer = await sharp(file)
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();
+    console.log('✅ Copia para IA generada');
 
     // 2. Procesar con OpenAI
     const base64AI = aiCopyBuffer.toString('base64');
