@@ -91,14 +91,13 @@ export const maxDuration = 300;
 export async function GET() {
   await initializeWorker();
   
-  // Forzar procesamiento de jobs pendientes
   const jobs = await imageQueue.getJobs(['waiting', 'failed', 'delayed']);
   
   if (jobs.length > 0) {
     console.log(`🔄 Procesando ${jobs.length} jobs pendientes...`);
     
     const promises = jobs.map(job => 
-      new Promise(async (resolve) => {
+      new Promise(async (resolve, reject) => {
         try {
           const downloadResult = await supabaseAdmin.storage
             .from('originals')
@@ -117,10 +116,12 @@ export async function GET() {
             job.data.accessToken,
             job
           );
-          resolve(true);
+          
+          console.log(`✅ Job ${job.id} procesado correctamente:`, result);
+          resolve(result);
         } catch (err) {
-          console.error(`Error procesando job ${job.id}:`, err);
-          resolve(false);
+          console.error(`❌ Error procesando job ${job.id}:`, err);
+          reject(err);
         }
       })
     );
@@ -129,24 +130,27 @@ export async function GET() {
     const failed = results.filter(r => r.status === 'rejected').length;
     const succeeded = results.filter(r => r.status === 'fulfilled').length;
 
+    console.log('📊 Resumen del procesamiento:', {
+      total: jobs.length,
+      succeeded,
+      failed
+    });
+
     return new Response(
       JSON.stringify({ 
         status: 'completed',
         processed: jobs.length,
         succeeded,
         failed,
-        jobs: { waiting: imageQueue.getWaitingCount(), active: imageQueue.getActiveCount() }
-      }),
-      { status: 200 }
+        jobs: await imageQueue.getJobCounts()
+      })
     );
   }
 
   return new Response(
-    JSON.stringify({ 
-      status: 'completed',
-      processed: 0,
-      jobs: { waiting: imageQueue.getWaitingCount(), active: imageQueue.getActiveCount() }
-    }),
-    { status: 200 }
+    JSON.stringify({
+      status: 'idle',
+      jobs: await imageQueue.getJobCounts()
+    })
   );
 } 
