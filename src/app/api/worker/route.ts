@@ -83,12 +83,14 @@ export async function GET() {
     console.log(`🔄 ${waiting} jobs pendientes por procesar`);
     const jobs = await imageQueue.getJobs(['waiting', 'failed']);
     
-    // Procesar todos los jobs y esperar a que terminen
     const promises = jobs.map(job => 
       new Promise(async (resolve) => {
         try {
-          await imageQueue.add(job.data, {
-            jobId: job.id,
+          // Limpiar job anterior
+          await job.remove();
+          
+          // Crear nuevo job
+          const newJob = await imageQueue.add(job.data, {
             removeOnComplete: true,
             attempts: 2,
             backoff: {
@@ -97,9 +99,17 @@ export async function GET() {
             }
           });
           
-          // Esperar a que el job termine
-          await job.finished();
-          resolve(true);
+          // Esperar máximo 5 minutos
+          const timeout = setTimeout(() => resolve(false), 300000);
+          
+          newJob.finished().then(() => {
+            clearTimeout(timeout);
+            resolve(true);
+          }).catch(() => {
+            clearTimeout(timeout);
+            resolve(false);
+          });
+          
         } catch (err) {
           console.error(`Error procesando job ${job.id}:`, err);
           resolve(false);
@@ -111,10 +121,7 @@ export async function GET() {
   }
 
   return new Response(
-    JSON.stringify({
-      status: 'completed',
-      jobs: { waiting, active }
-    }),
+    JSON.stringify({ status: 'completed', jobs: { waiting, active } }),
     { status: 200 }
   );
 } 
