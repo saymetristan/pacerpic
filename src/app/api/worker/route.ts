@@ -46,7 +46,7 @@ async function initializeWorker() {
       
       console.log('🔄 Iniciando processImage...');
       const result = await processImage(
-        filePath,
+        buffer,
         fileName,
         eventId,
         photographerId,
@@ -55,11 +55,6 @@ async function initializeWorker() {
       );
       
       await job.progress(90);
-      
-      console.log('🧹 Limpiando archivo temporal...');
-      await supabaseAdmin.storage
-        .from('originals')
-        .remove([filePath]);
       
       await job.progress(100);
       console.log(`✅ Job ${job.id} completado`);
