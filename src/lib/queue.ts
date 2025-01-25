@@ -1,10 +1,13 @@
 import Bull from 'bull';
+import { Redis } from '@upstash/redis';
 
-const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '');
-const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN!;
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!
+});
 
 export const imageQueue = new Bull('image-processing', {
-  redis: `rediss://:${REDIS_TOKEN}@${REDIS_URL}:6379?ssl_cert_reqs=none`,
+  createClient: () => redis as any,
   prefix: 'bull',
   settings: {
     lockDuration: 300000,
@@ -18,13 +21,17 @@ export const imageQueue = new Bull('image-processing', {
   }
 });
 
-// Mantenemos los mismos eventos
+// Eventos para debugging con más detalles
 imageQueue.on('active', (job) => {
-  console.log(`⚙️ Job ${job.id} iniciando procesamiento`);
+  console.log(`⚙️ Job ${job.id} iniciando procesamiento`, job.data);
 });
 
-imageQueue.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completado exitosamente`);
+imageQueue.on('progress', (job, progress) => {
+  console.log(`📊 Job ${job.id} progreso:`, progress);
+});
+
+imageQueue.on('completed', (job, result) => {
+  console.log(`✅ Job ${job.id} completado:`, result);
 });
 
 imageQueue.on('failed', (job, err) => {
@@ -32,7 +39,8 @@ imageQueue.on('failed', (job, err) => {
 });
 
 imageQueue.on('stalled', (job) => {
-  console.warn(`⚠️ Job ${job.id} estancado`);
+  console.warn(`⚠️ Job ${job.id} estancado, reintentando...`);
+  job.retry();
 });
 
 imageQueue.on('error', (error) => {
