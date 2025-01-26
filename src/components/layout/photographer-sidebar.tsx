@@ -2,10 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Camera, BarChart3, Upload, Settings, Home, Image as ImageIcon, ChevronLeft, User, ChevronUp, LogOut } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Upload, ChevronLeft, User, ChevronUp, LogOut } from "lucide-react";
 import { useUser } from '@auth0/nextjs-auth0/client';
 import {
   DropdownMenu,
@@ -13,6 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface SidebarProps {
@@ -22,38 +22,13 @@ interface SidebarProps {
 
 const routes = [
   {
-    label: "Panel Principal",
-    icon: Home,
-    href: "/dashboard/photographer",
-  },
-  {
-    label: "Mis Eventos",
-    icon: Camera,
-    href: "/dashboard/photographer/events",
-  },
-  {
-    label: "Galería",
-    icon: ImageIcon,
-    href: "/dashboard/photographer/gallery",
-  },
-  {
     label: "Subir Imágenes",
     icon: Upload,
-    href: "/dashboard/photographer/upload",
-  },
-  {
-    label: "Estadísticas",
-    icon: BarChart3,
-    href: "/dashboard/photographer/stats",
-  },
-  {
-    label: "Configuración",
-    icon: Settings,
-    href: "/dashboard/photographer/settings",
-  },
+    href: "/photographer/upload",
+  }
 ];
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function PhotographerSidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { user } = useUser();
@@ -65,7 +40,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     )}>
       <div className="p-4 flex items-center justify-between">
         <Link 
-          href="/dashboard/photographer" 
+          href="/photographer" 
           className={cn(
             "flex items-center",
             collapsed ? "justify-center w-full" : "justify-start"
@@ -87,7 +62,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           className={cn(
             "hidden lg:flex text-white transition-all duration-200",
             collapsed 
-              ? "absolute -right-4 top-6 bg-[#1A3068] hover:bg-[#EC6533] rounded-full shadow-md z-50" 
+              ? "absolute -right-4 top-6 bg-[#1A3068] hover:bg-[#EC6533] rounded-full shadow-md" 
               : "hover:bg-[#EC6533]/10"
           )}
         >
@@ -98,7 +73,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </Button>
       </div>
 
-      <div className="space-y-2 px-3">
+      <div className="space-y-2 px-3 mt-2">
         {routes.map((route) => (
           <Button
             key={route.href}
@@ -146,10 +121,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             align={collapsed ? "center" : "end"}
             className="w-56 bg-slate-900 text-white border-slate-800"
           >
-            <DropdownMenuItem className="hover:bg-[#EC6533]/10 hover:text-white focus:bg-[#EC6533]/10 focus:text-white">
-              <User className="mr-2 h-4 w-4" />
-              <span>Mi Perfil</span>
-            </DropdownMenuItem>
             <DropdownMenuItem 
               className="hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
               asChild
@@ -164,4 +135,4 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
     </div>
   );
-}
+} 
