@@ -9,6 +9,13 @@ interface Tag {
   }
 }
 
+interface SupabaseResponse {
+  data: Tag[] | null;
+  error: {
+    message: string;
+  } | null;
+}
+
 export async function GET() {
   try {
     const session = await getSession()
@@ -45,7 +52,7 @@ export async function GET() {
           name
         )
       `)
-      .eq('user_id', dbUser.id) as { data: Tag[] | null, error: any }
+      .eq('user_id', dbUser.id) as SupabaseResponse
 
     console.log('User ID:', dbUser.id)
     console.log('Tags:', tags)
