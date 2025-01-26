@@ -56,7 +56,7 @@ export function GalleryGrid({ filters }: GalleryGridProps) {
           <Card key={image.id} className="overflow-hidden">
             <div className="relative aspect-[4/3]">
               <Image
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/originals/${image.original_url}`}
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${image.original_url}`}
                 alt={image.event?.name || ""}
                 fill
                 className="object-cover"

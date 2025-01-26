@@ -36,7 +36,7 @@ export async function GET(
 
     const images_with_urls = data?.map(image => ({
       id: image.id,
-      original_url: `${STORAGE_URL}/originals/${image.original_url}`,
+      original_url: `${STORAGE_URL}/${image.original_url}`,
       created_at: image.created_at,
       dorsals: image.image_dorsals.map(d => ({
         number: d.dorsal_number,

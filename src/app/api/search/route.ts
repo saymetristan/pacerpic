@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
   const data_with_urls = data?.map(image => ({
     ...image,
-    original_url: `${STORAGE_URL}/originals/${image.original_url}`
+    original_url: `${STORAGE_URL}/${image.original_url}`
   }));
 
   return new Response(JSON.stringify(data_with_urls), {
