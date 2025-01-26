@@ -50,15 +50,25 @@ export function usePhotographerUpload() {
     try {
       validateFile(file);
       
+      // Estado inicial de compresión
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileName]: { 
+          fileName, 
+          progress: 0,
+          status: 'compressing',
+          retries: retryCount 
+        }
+      }));
+
       const compressedFile = await compressImageWithProgress(
         file,
         (progress) => {
-          console.log('Progreso compresión:', progress);
           setUploadProgress(prev => ({
             ...prev,
             [fileName]: { 
               ...prev[fileName],
-              progress: Math.round(progress * 0.5)
+              progress: Math.round(progress * 0.5) // La compresión es 50% del progreso
             }
           }));
         }
@@ -69,22 +79,21 @@ export function usePhotographerUpload() {
         compressedSize: compressedFile.size 
       });
 
+      // Preparar y enviar al endpoint
       const formData = new FormData();
       formData.append('file', compressedFile);
       formData.append('tag', tag);
       
       const response = await fetch('/api/upload/photographer', {
         method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-        }
+        body: formData
       });
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
 
+      // Actualizar estado a completado
       setUploadProgress(prev => ({
         ...prev,
         [fileName]: { fileName, progress: 100, status: 'completed' }
