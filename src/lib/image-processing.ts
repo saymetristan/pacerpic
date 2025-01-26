@@ -248,6 +248,16 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       }
     }
 
+    if (job?.data.tagId) {
+      const { error: tagError } = await supabase
+        .from('image_tags')
+        .upsert({
+          image_id: newImage.id,
+          tag_id: job.data.tagId
+        });
+      if (tagError) throw tagError;
+    }
+
     return { ...newImage, dorsals };
   } catch (err) {
     console.error('❌ Error en processImage:', err);

@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     const file = formData.get('file') as File;
     const eventId = formData.get('eventId') as string;
     const photographerId = formData.get('photographerId') as string;
+    const tagId = formData.get('tagId') as string;
 
     console.log('Request data:', { eventId, photographerId, fileName: file.name });
 
@@ -76,7 +77,8 @@ export async function POST(req: Request) {
       fileName: file.name,
       eventId,
       photographerId,
-      accessToken: session.accessToken
+      accessToken: session.accessToken,
+      tagId
     }, {
       attempts: 3,
       backoff: {
