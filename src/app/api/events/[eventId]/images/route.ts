@@ -23,7 +23,20 @@ export async function GET(
   try {
     console.log('Consultando Supabase...');
     
-    const { data, error } = await supabase
+    // Primero verifica si el evento existe
+    const { data: eventExists } = await supabase
+      .from('events')
+      .select('id')
+      .eq('id', eventId)
+      .single();
+
+    if (!eventExists) {
+      console.log('Evento no encontrado');
+      return new Response('Evento no encontrado', { status: 404 });
+    }
+
+    // Log de la query
+    const query = supabase
       .from('images')
       .select(`
         id,
@@ -35,10 +48,9 @@ export async function GET(
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
 
-    console.log('Respuesta de Supabase:', {
-      dataCount: data?.length || 0,
-      error
-    });
+    const { data, error } = await query;
+
+    console.log('Datos crudos de Supabase:', data);
 
     if (error) {
       console.error('Error de Supabase:', error);
@@ -46,28 +58,25 @@ export async function GET(
     }
 
     const images_with_urls = data?.map(image => ({
-      id: image.id,
+      ...image,
       original_url: `${STORAGE_URL}/originals/${image.original_url}`,
-      created_at: image.created_at,
-      dorsals: image.image_dorsals.map(d => ({
+      dorsals: image.image_dorsals?.map(d => ({
         number: d.dorsal_number,
         confidence: d.confidence
-      }))
+      })) || []
     }));
 
-    console.log('Respuesta final:', {
+    console.log('Respuesta final detallada:', {
       imagesCount: images_with_urls?.length || 0,
-      firstImageUrl: images_with_urls?.[0]?.original_url
+      firstImage: images_with_urls?.[0],
+      storageUrl: STORAGE_URL
     });
 
     return new Response(JSON.stringify(images_with_urls), {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error: unknown) {
-    console.error('Error inesperado completo:', {
-      message: error instanceof Error ? error.message : 'Error desconocido',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error('Error inesperado completo:', error);
     return new Response('Error interno del servidor', { status: 500 });
   }
 } 

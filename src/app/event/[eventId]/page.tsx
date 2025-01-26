@@ -91,35 +91,17 @@ export default function EventGalleryPage() {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        console.log('Iniciando fetch de datos del evento:', params.eventId);
+        console.log('Iniciando fetch con eventId:', params.eventId);
         
-        const [imagesResponse, eventResponse] = await Promise.all([
-          fetch(`/api/events/${params.eventId}/images`),
-          fetch(`/api/events/${params.eventId}`)
-        ]);
-
-        console.log('Respuestas recibidas:', {
-          imagesStatus: imagesResponse.status,
-          eventStatus: eventResponse.status
-        });
-
-        const [imagesData, eventData] = await Promise.all([
-          imagesResponse.json(),
-          eventResponse.json()
-        ]);
-
-        console.log('Datos procesados:', {
-          imagesCount: imagesData?.length || 0,
-          eventData
-        });
+        const imagesResponse = await fetch(`/api/events/${params.eventId}/images`);
+        console.log('Status de respuesta images:', imagesResponse.status);
+        
+        const imagesData = await imagesResponse.json();
+        console.log('Datos recibidos:', imagesData);
 
         setImages(imagesData);
-        setEvent(eventData);
-      } catch (error: unknown) {
-        console.error('Error detallado:', {
-          message: error instanceof Error ? error.message : 'Error desconocido',
-          stack: error instanceof Error ? error.stack : undefined
-        });
+      } catch (error) {
+        console.error('Error en fetch:', error);
       } finally {
         setLoading(false);
       }
