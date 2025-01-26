@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { compressImage, compressImageWithProgress } from '../lib/image-compression';
+import { UploadError } from '../types/errors';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,7 +83,7 @@ export function usePhotographerUpload() {
         xhr.setRequestHeader('Authorization', `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`);
         xhr.setRequestHeader('x-upsert', 'true');
 
-        let timeout = setTimeout(() => {
+        const timeout = setTimeout(() => {
           xhr.abort();
           reject(new Error('Tiempo de espera agotado'));
         }, 30000);
@@ -141,17 +142,18 @@ export function usePhotographerUpload() {
 
         xhr.send(compressedFile);
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const uploadError = error as UploadError;
       setUploadProgress(prev => ({
         ...prev,
         [fileName]: { 
           fileName, 
           progress: 0, 
           status: 'error',
-          error: error.message 
+          error: uploadError.message 
         }
       }));
-      throw error;
+      throw uploadError;
     }
   };
 

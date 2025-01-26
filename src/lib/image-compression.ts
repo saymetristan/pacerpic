@@ -1,4 +1,5 @@
 import imageCompression from 'browser-image-compression';
+import { CompressionError } from '../types/errors';
 
 export async function compressImage(file: File): Promise<File> {
   const options = {
@@ -44,10 +45,11 @@ export async function compressImageWithProgress(
   try {
     const compressedBlob = await imageCompression(file, options);
     return new File([compressedBlob], file.name, { type: 'image/jpeg' });
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    const compressionError = error as CompressionError;
+    if (compressionError.name === 'AbortError') {
       throw new Error('Compresión cancelada');
     }
-    throw error;
+    throw compressionError;
   }
 } 
