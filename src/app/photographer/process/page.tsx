@@ -25,7 +25,7 @@ export default function ProcessPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [processingTags, setProcessingTags] = useState<Set<string>>(new Set());
 
-  const userTags = user?.email ? tagsByUser[user.email] || [] : [];
+  const allTags = Object.values(tagsByUser).flat();
 
   const processTag = async (tag: string) => {
     setProcessing(tag);
@@ -67,18 +67,21 @@ export default function ProcessPage() {
         <p className="text-muted-foreground">
           Selecciona un tag para procesar sus imágenes
         </p>
+        <p className="text-red-500 mt-2 font-semibold">
+          ⚠️ Atención: El procesamiento de imágenes es una operación crítica. Asegúrate de seleccionar el tag correcto.
+        </p>
       </div>
 
       <div 
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         data-tour="process-buttons"
       >
-        {userTags.map((tag) => (
+        {allTags.map((tag) => (
           <Button
             key={tag}
             variant="outline"
             className="h-24 text-lg"
-            disabled={processingTags.size > 0}
+            disabled={processingTags.has(tag)}
             onClick={() => processTag(tag)}
           >
             {processingTags.has(tag) ? (
