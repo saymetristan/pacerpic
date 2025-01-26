@@ -8,6 +8,7 @@ import { useImages } from "@/hooks/use-images";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 // Agrega este arreglo con los posibles tags
 const possibleTags = [
@@ -34,12 +35,22 @@ export default function UploadPage() {
   const [selectedTag, setSelectedTag] = useState(""); // Nuevo estado para el tag
   const { uploadEventImage, uploadProgress } = useImages();
   const files = Object.values(uploadProgress);
+  const { toast } = useToast();
 
   const handleFileSelection = (acceptedFiles: File[]) => {
     setSelectedFiles(prev => [...prev, ...acceptedFiles]);
   };
 
   const handleProcess = async () => {
+    if (!selectedTag) {
+      toast({
+        title: "Error",
+        description: "Debes seleccionar una zona/tag antes de procesar las imágenes",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await Promise.all(
         selectedFiles.map(file => uploadEventImage(file, selectedEventId, selectedTag))
@@ -114,6 +125,7 @@ export default function UploadPage() {
                   <Button 
                     onClick={handleProcess}
                     className="bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
+                    disabled={!selectedTag}
                   >
                     Procesar {selectedFiles.length} imágenes
                   </Button>
