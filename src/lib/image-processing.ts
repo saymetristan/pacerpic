@@ -41,6 +41,13 @@ export async function processImage(
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        global: {
+          fetch: fetch.bind(globalThis),
+          headers: { 
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         }
       }
     );
@@ -183,7 +190,12 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .upload(originalUrl, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
-        cacheControl: 'public, max-age=31536000'
+        cacheControl: '3600',
+        duplex: 'half',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
     if (originalError) throw originalError;
 
@@ -240,5 +252,30 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
   } catch (err) {
     console.error('❌ Error en processImage:', err);
     throw err;
+  }
+}
+
+async function uploadWithRetry(bucket: string, path: string, file: Buffer, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, {
+          contentType: 'image/jpeg',
+          upsert: true,
+          cacheControl: '3600',
+          duplex: 'half'
+        });
+      
+      if (!error) return;
+      
+      if (i === attempts - 1) throw error;
+      
+      await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+      
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      continue;
+    }
   }
 }

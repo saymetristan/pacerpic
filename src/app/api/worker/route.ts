@@ -71,10 +71,16 @@ async function initializeWorker() {
         fileName,
         eventId
       });
-      await job.moveToCompleted(JSON.stringify(result));
+      await job.moveToCompleted(JSON.stringify(result), true);
       return result;
     } catch (err) {
-      console.error('❌ Error en el proceso:', err);
+      console.error('Error en el proceso:', err);
+      
+      // Si es error de conexión, reintentamos
+      if (err instanceof Error && 'code' in err && err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+        throw err; // Bull reintentará automáticamente
+      }
+      
       await job.moveToFailed({message: err instanceof Error ? err.message : String(err)});
       throw err;
     }

@@ -53,7 +53,7 @@ export default function UploadPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col p-8">
-      {!singleEvent && <UploadHeader onEventChange={setSelectedEventId} />}
+      <UploadHeader onEventChange={setSelectedEventId} />
       
       {selectedEventId && (
         <div className="flex-1 grid gap-6 lg:grid-cols-[1fr,400px] mt-8 h-[calc(100%-5rem)]">
