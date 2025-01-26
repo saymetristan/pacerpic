@@ -118,14 +118,18 @@ export default function EventGalleryPage() {
     return image.tag === selectedTag;
   });
 
+  const hasMore = filteredImages.length > page * ITEMS_PER_PAGE;
   const paginatedImages = filteredImages.slice(0, page * ITEMS_PER_PAGE);
-  const hasMore = filteredImages.length > paginatedImages.length;
 
   useEffect(() => {
     if (inView && hasMore) {
       setPage(p => p + 1);
     }
   }, [inView, hasMore]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTag]);
 
   const breakpointColumns = {
     default: 4,
