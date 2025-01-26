@@ -24,7 +24,7 @@ export function MainNav() {
         <div className="h-8 w-auto relative">
           <Image
             src={isScrolled ? "/images/logo-dark.png" : "/images/logo-light.png"}
-            alt="PacerPic"
+            alt="Pacerpic"
             width={120}
             height={32}
             className="object-contain"

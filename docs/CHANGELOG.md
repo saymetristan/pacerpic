@@ -1,4 +1,4 @@
-# Changelog PacerPic
+# Changelog Pacerpic
 
 ## [0.1.1] - 2024-02-12
 

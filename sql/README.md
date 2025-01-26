@@ -1,4 +1,4 @@
-# SQL Scripts para PacerPic
+# SQL Scripts para Pacerpic
 
 Este directorio contiene los scripts SQL necesarios para configurar la base de datos y el almacenamiento en Supabase.
 

@@ -130,7 +130,7 @@ function SearchContent() {
             <div className="h-8 w-auto relative">
               <Image 
                 src={theme === 'dark' ? '/images/logo-light.png' : '/images/logo-dark.png'} 
-                alt="PacerPic" 
+                alt="Pacerpic" 
                 width={120} 
                 height={32}
                 className="object-contain"

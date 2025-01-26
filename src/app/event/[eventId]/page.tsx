@@ -123,7 +123,7 @@ export default function EventGalleryPage() {
   return (
     <>
       <Head>
-        <title>PacerPic {event?.name ? `- ${event.name}` : ''}</title>
+        <title>Pacerpic {event?.name ? `- ${event.name}` : ''}</title>
       </Head>
       <div className="min-h-screen bg-background">
         <nav className="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -132,7 +132,7 @@ export default function EventGalleryPage() {
               <div className="h-8 w-auto relative">
                 <Image 
                   src={theme === 'dark' ? '/images/logo-light.png' : '/images/logo-dark.png'} 
-                  alt="PacerPic" 
+                  alt="Pacerpic" 
                   width={120} 
                   height={32}
                   className="object-contain"
@@ -168,7 +168,7 @@ export default function EventGalleryPage() {
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
-                PacerPic {event?.name ? `- ${event.name}` : ''}
+                Pacerpic {event?.name ? `- ${event.name}` : ''}
               </h1>
 
               {/* Dropdown para móvil */}

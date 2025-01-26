@@ -5,7 +5,7 @@ import { DashboardProvider } from '@/components/providers/dashboard-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'PacerPic - Dashboard de Fotógrafo',
+  title: 'Pacerpic - Dashboard de Fotógrafo',
   description: 'Gestiona tus eventos y fotografías deportivas',
 };
 

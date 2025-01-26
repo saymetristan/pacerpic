@@ -17,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "PacerPic",
+  title: "Pacerpic",
   description: "Encuentra tus fotos deportivas al instante",
   icons: {
     icon: '/favicon.ico',

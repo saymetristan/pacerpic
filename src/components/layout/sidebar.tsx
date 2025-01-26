@@ -65,7 +65,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         >
           <Image 
             src={collapsed ? "/images/logo-white.png" : "/images/logo-light.png"}
-            alt="PacerPic"
+            alt="Pacerpic"
             width={collapsed ? 28 : 120}
             height={collapsed ? 28 : 32}
             className="object-contain"

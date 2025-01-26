@@ -1,9 +1,9 @@
-# Documentación Central del Proyecto: PacerPic
+# Documentación Central del Proyecto: Pacerpic
 
 ---
 
 ## Visión del Proyecto
-**PacerPic** es una plataforma para la gestión y compra de fotografías en eventos deportivos. Se centra en tres tipos de usuarios principales: corredores, fotógrafos y organizadores de eventos. El MVP permitirá:
+**Pacerpic** es una plataforma para la gestión y compra de fotografías en eventos deportivos. Se centra en tres tipos de usuarios principales: corredores, fotógrafos y organizadores de eventos. El MVP permitirá:
 - **Corredores:** Buscar, visualizar y comprar fotos relacionadas con su dorsal sin necesidad de registrarse.
 - **Fotógrafos:** Subir imágenes que serán procesadas automáticamente.
 - **Organizadores:** Gestionar eventos y monitorear estadísticas básicas.

@@ -1,4 +1,4 @@
--- Esquema inicial de la base de datos para PacerPic
+-- Esquema inicial de la base de datos para Pacerpic
 -- ============= TABLAS =============
 
 -- Tabla de eventos

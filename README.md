@@ -1,7 +1,7 @@
-# PacerPic - Plataforma de Gestión de Fotografías Deportivas
+# Pacerpic - Plataforma de Gestión de Fotografías Deportivas
 
 ## 🎯 Descripción General
-PacerPic es una plataforma que conecta fotógrafos, organizadores y corredores de eventos deportivos, facilitando la gestión, venta y compra de fotografías.
+Pacerpic es una plataforma que conecta fotógrafos, organizadores y corredores de eventos deportivos, facilitando la gestión, venta y compra de fotografías.
 
 ## 🚀 Características Principales
 
@@ -340,7 +340,7 @@ export function UploadForm() {
 ## 🔐 Base de Datos
 
 ```1:32:sql/schema.sql
--- Esquema inicial de la base de datos para PacerPic
+-- Esquema inicial de la base de datos para Pacerpic
 -- ============= TABLAS =============
 
 -- Tabla de eventos
@@ -414,10 +414,10 @@ El proyecto sigue las convenciones de commits convencionales y utiliza ESLint pa
 
 ---
 
-# SQL - PacerPic 🗄️
+# SQL - Pacerpic 🗄️
 
 ## Descripción
-Sistema de base de datos para PacerPic usando PostgreSQL en Supabase. Gestiona eventos deportivos, imágenes, dorsales y ventas con políticas de seguridad RLS.
+Sistema de base de datos para Pacerpic usando PostgreSQL en Supabase. Gestiona eventos deportivos, imágenes, dorsales y ventas con políticas de seguridad RLS.
 
 ## Estructura 📁
 
@@ -590,7 +590,7 @@ export default function EventGalleryPage() {
             <div className="h-8 w-auto relative">
               <Image 
                 src={theme === 'dark' ? '/images/logo-light.png' : '/images/logo-dark.png'} 
-                alt="PacerPic" 
+                alt="Pacerpic" 
                 width={120} 
                 height={32}
                 className="object-contain"
@@ -848,7 +848,7 @@ Proveedor de tema usando next-themes:
 # 🎣 Hooks Personalizados
 
 ## Descripción General
-Colección de hooks personalizados para PacerPic que manejan la lógica de negocio, autenticación, gestión de estado y utilidades.
+Colección de hooks personalizados para Pacerpic que manejan la lógica de negocio, autenticación, gestión de estado y utilidades.
 
 ## Hooks Disponibles
 
@@ -1401,7 +1401,7 @@ export function EventUploader() {
 # 📚 @lib
 
 ## Descripción General
-Colección de utilidades y helpers para PacerPic que manejan el procesamiento de imágenes, almacenamiento, autenticación y funciones de utilidad general.
+Colección de utilidades y helpers para Pacerpic que manejan el procesamiento de imágenes, almacenamiento, autenticación y funciones de utilidad general.
 
 ## Módulos Disponibles
 
@@ -2014,7 +2014,7 @@ supabase gen types typescript --project-id <ID> > src/types/supabase.ts
 # 🔒 Middleware de Autenticación y Autorización
 
 ## 📝 Descripción
-Middleware personalizado que gestiona la autenticación y autorización en PacerPic utilizando Auth0. Protege rutas específicas y maneja redirecciones de seguridad.
+Middleware personalizado que gestiona la autenticación y autorización en Pacerpic utilizando Auth0. Protege rutas específicas y maneja redirecciones de seguridad.
 
 ## 🛠️ Funcionalidades
 

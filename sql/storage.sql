@@ -1,4 +1,4 @@
--- Configuración de Storage para PacerPic
+-- Configuración de Storage para Pacerpic
 -- Fecha: 2024-03-21
 
 -- ============= BUCKETS =============
