@@ -22,6 +22,7 @@ interface EventImage {
   id: string;
   original_url: string;
   created_at: string;
+  tags?: string[];
   dorsals: {
     number: string;
     confidence: number;
@@ -44,6 +45,24 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
+const possibleTags = [
+  "Entrega de Kits Viernes",
+  "Entrega de Kis Sabado",
+  "Salida Meta",
+  "Convivencia Centro de Convenciones",
+  "Entrada Lago",
+  "Salida Lago",
+  "Patrocinadores",
+  "Rampa Centro de Convenciones",
+  "Photo Opportunity 10k",
+  "Entrada Laberinto",
+  "Laberinto Juan Escumbia",
+  "Laberinto Nido",
+  "Generales",
+  "Photo Opportunity 3k, 5k y 10k",
+  "Rifa Ganadores",
+];
+
 export default function EventGalleryPage() {
   const params = useParams();
   const router = useRouter();
@@ -56,6 +75,7 @@ export default function EventGalleryPage() {
   const [selectedImage, setSelectedImage] = useState<EventImage | null>(null);
   const ITEMS_PER_PAGE = 12;
   const { toast } = useToast();
+  const [selectedTag, setSelectedTag] = useState<string>("");
 
   const handleDorsalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
@@ -159,9 +179,22 @@ export default function EventGalleryPage() {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-[#1A3068] dark:text-white">
-          Galería {event?.name ? `| ${event.name}` : ''}
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
+            Galería {event?.name ? `| ${event.name}` : ''}
+          </h1>
+          
+          <select
+            className="border rounded-md p-2 bg-background"
+            value={selectedTag}
+            onChange={(e) => setSelectedTag(e.target.value)}
+          >
+            <option value="">Todas las zonas</option>
+            {possibleTags.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -180,127 +213,129 @@ export default function EventGalleryPage() {
               className="flex w-auto -ml-6"
               columnClassName="pl-6 bg-clip-padding"
             >
-              {paginatedImages.map((image) => (
-                <div 
-                  key={image.id}
-                  className="mb-6 cursor-pointer relative group"
-                >
-                  <MagicCard
-                    className="relative overflow-hidden rounded-lg"
-                    gradientColor="#EC6533"
+              {paginatedImages
+                .filter(image => !selectedTag || image.tags?.includes(selectedTag))
+                .map((image) => (
+                  <div 
+                    key={image.id}
+                    className="mb-6 cursor-pointer relative group"
                   >
-                    <div className="relative w-full">
-                      <Image
-                        src={image.original_url}
-                        alt="Foto del evento"
-                        width={500}
-                        height={500}
-                        className="w-full h-auto"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="bg-white/20 hover:bg-white/40"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const response = await fetch(image.original_url);
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `evento-${event?.name}-${image.id}.jpg`;
-                            document.body.appendChild(link);
-                            link.click();
-                            link.remove();
-                            window.URL.revokeObjectURL(url);
-                          } catch (error) {
-                            console.error('Error al descargar:', error);
-                          }
-                        }}
-                      >
-                        <Download className="h-4 w-4 text-white" />
-                      </Button>
+                    <MagicCard
+                      className="relative overflow-hidden rounded-lg"
+                      gradientColor="#EC6533"
+                    >
+                      <div className="relative w-full">
+                        <Image
+                          src={image.original_url}
+                          alt="Foto del evento"
+                          width={500}
+                          height={500}
+                          className="w-full h-auto"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="bg-white/20 hover:bg-white/40"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const response = await fetch(image.original_url);
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = `evento-${event?.name}-${image.id}.jpg`;
+                              document.body.appendChild(link);
+                              link.click();
+                              link.remove();
+                              window.URL.revokeObjectURL(url);
+                            } catch (error) {
+                              console.error('Error al descargar:', error);
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4 text-white" />
+                        </Button>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="bg-white/20 hover:bg-white/40"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (navigator.share) {
-                                navigator.share({
-                                  title: event?.name || 'Foto del evento',
-                                  text: `Mira esta foto del evento ${event?.name}`,
-                                  url: image.original_url
-                                });
-                              }
-                            }}
-                          >
-                            <Share className="h-4 w-4 text-white" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        {!navigator.share && (
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                navigator.clipboard.writeText(image.original_url);
-                                toast({
-                                  description: "URL copiada al portapapeles",
-                                });
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="bg-white/20 hover:bg-white/40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (navigator.share) {
+                                  navigator.share({
+                                    title: event?.name || 'Foto del evento',
+                                    text: `Mira esta foto del evento ${event?.name}`,
+                                    url: image.original_url
+                                  });
+                                }
                               }}
                             >
-                              <Copy className="mr-2 h-4 w-4" />
-                              Copiar enlace
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(image.original_url)}`, '_blank');
-                              }}
-                            >
-                              <FacebookIcon className="mr-2 h-4 w-4" />
-                              Compartir en Facebook
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(image.original_url)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
-                              }}
-                            >
-                              <TwitterIcon className="mr-2 h-4 w-4" />
-                              Compartir en Twitter
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${image.original_url}`)}`, '_blank');
-                              }}
-                            >
-                              <WhatsAppIcon />
-                              Compartir en WhatsApp
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        )}
-                      </DropdownMenu>
+                              <Share className="h-4 w-4 text-white" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          {!navigator.share && (
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  navigator.clipboard.writeText(image.original_url);
+                                  toast({
+                                    description: "URL copiada al portapapeles",
+                                  });
+                                }}
+                              >
+                                <Copy className="mr-2 h-4 w-4" />
+                                Copiar enlace
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(image.original_url)}`, '_blank');
+                                }}
+                              >
+                                <FacebookIcon className="mr-2 h-4 w-4" />
+                                Compartir en Facebook
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(image.original_url)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
+                                }}
+                              >
+                                <TwitterIcon className="mr-2 h-4 w-4" />
+                                Compartir en Twitter
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${image.original_url}`)}`, '_blank');
+                                }}
+                              >
+                                <WhatsAppIcon />
+                                Compartir en WhatsApp
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          )}
+                        </DropdownMenu>
 
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="bg-white/20 hover:bg-white/40"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedImage(image);
-                        }}
-                      >
-                        <Maximize2 className="h-4 w-4 text-white" />
-                      </Button>
-                    </div>
-                  </MagicCard>
-                </div>
-              ))}
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="bg-white/20 hover:bg-white/40"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(image);
+                          }}
+                        >
+                          <Maximize2 className="h-4 w-4 text-white" />
+                        </Button>
+                      </div>
+                    </MagicCard>
+                  </div>
+                ))}
             </Masonry>
 
             {hasMore && (
