@@ -179,7 +179,7 @@ export default function EventGalleryPage() {
                   >
                     <div className="relative w-full">
                       <Image
-                        src={`${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`}
+                        src={`${SUPABASE_URL}/storage/v1/object/public/originals/${image.original_url}`}
                         alt={`Foto ${index + 1} del evento ${event?.name}`}
                         width={500}
                         height={500}
@@ -446,7 +446,7 @@ export default function EventGalleryPage() {
           >
             <div className="relative w-full max-w-6xl aspect-[4/3]">
               <Image
-                src={`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url.startsWith('/') ? selectedImage.original_url.substring(1) : selectedImage.original_url}`}
+                src={`${SUPABASE_URL}/storage/v1/object/public/originals/${selectedImage.original_url}`}
                 alt="Foto del evento"
                 fill
                 className="object-contain"

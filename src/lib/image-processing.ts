@@ -211,8 +211,8 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: `/originals/${originalUrl}`,  // Ruta relativa
-        compressed_url: `/compressed/${compressedUrl}`, // Ruta relativa
+        original_url: originalUrl,  // Sin /originals/
+        compressed_url: compressedUrl, // Sin /compressed/
         status: 'processed'
       })
       .select()
