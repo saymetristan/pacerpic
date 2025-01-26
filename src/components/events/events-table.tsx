@@ -39,7 +39,7 @@ export function EventsTable() {
   const { user } = useUser();
   const [events, setEvents] = useState<EventWithTags[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTag, setSelectedTag] = useState<string>("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -107,7 +107,7 @@ export function EventsTable() {
             <SelectValue placeholder="Filtrar por zona" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas las zonas</SelectItem>
+            <SelectItem value="all">Todas las zonas</SelectItem>
             {Array.from(new Set(events.flatMap(e => e.tags.map(t => t.tag)))).map(tag => (
               <SelectItem key={tag} value={tag}>{tag}</SelectItem>
             ))}
@@ -131,7 +131,7 @@ export function EventsTable() {
           <TableBody>
             {events.map((event) => (
               event.tags
-                .filter(t => !selectedTag || t.tag === selectedTag)
+                .filter(t => selectedTag === "all" || t.tag === selectedTag)
                 .map(tagInfo => (
                   <TableRow key={`${event.id}-${tagInfo.tag}`}>
                     <TableCell className="font-medium">{event.name}</TableCell>
