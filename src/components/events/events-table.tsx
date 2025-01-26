@@ -28,10 +28,7 @@ interface Event {
   organizer_id: string | null;
   created_at: string;
   image_count: number;
-  images: Array<{
-    id: string;
-    tag: string | null;
-  }>;
+  images: Array<{ id: string; tag: string | null; }>;  // Permitir null aquí también
 }
 
 interface EventWithTags extends Event {
@@ -81,7 +78,11 @@ export function EventsTable() {
             status: 'active' as const,
             photographer_id: user?.sub || null,
             image_count: event.images?.length || 0,
-            tags
+            tags,
+            images: event.images.map(img => ({
+              id: img.id,
+              tag: img.tag
+            }))
           };
         });
 

@@ -16,7 +16,7 @@ export type Database = {
           id: string
           location: string | null
           name: string
-          organizer_id: string | null
+          organizer_id: string
         }
         Insert: {
           created_at?: string
@@ -24,7 +24,7 @@ export type Database = {
           id?: string
           location?: string | null
           name: string
-          organizer_id?: string | null
+          organizer_id: string
         }
         Update: {
           created_at?: string
@@ -32,40 +32,105 @@ export type Database = {
           id?: string
           location?: string | null
           name?: string
-          organizer_id?: string | null
+          organizer_id?: string
         }
         Relationships: []
+      }
+      image_dorsals: {
+        Row: {
+          confidence: number
+          created_at: string
+          dorsal_number: string
+          id: string
+          image_id: string | null
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          dorsal_number: string
+          id?: string
+          image_id?: string | null
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          dorsal_number?: string
+          id?: string
+          image_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_dorsals_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      image_tags: {
+        Row: {
+          created_at: string | null
+          image_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          image_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string | null
+          image_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_tags_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: true
+            referencedRelation: "images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       images: {
         Row: {
           compressed_url: string
           created_at: string
-          dorsal_number: string | null
           event_id: string | null
           id: string
           original_url: string
-          photographer_id: string | null
+          photographer_id: string
           status: string | null
+          tag: string | null
         }
         Insert: {
           compressed_url: string
           created_at?: string
-          dorsal_number?: string | null
           event_id?: string | null
           id?: string
           original_url: string
-          photographer_id?: string | null
+          photographer_id: string
           status?: string | null
+          tag?: string | null
         }
         Update: {
           compressed_url?: string
           created_at?: string
-          dorsal_number?: string | null
           event_id?: string | null
           id?: string
           original_url?: string
-          photographer_id?: string | null
+          photographer_id?: string
           status?: string | null
+          tag?: string | null
         }
         Relationships: [
           {
@@ -118,12 +183,103 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_tags: {
+        Row: {
+          created_at: string | null
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_tags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["auth0_id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          auth0_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          auth0_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          auth0_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_policies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          policy_name: string
+          policy_roles: string[]
+          cmd: string
+          qual: string
+          with_check: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
