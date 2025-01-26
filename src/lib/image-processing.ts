@@ -251,11 +251,20 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     if (job?.data.tagId) {
       const { error: tagError } = await supabase
         .from('image_tags')
-        .upsert({
+        .insert({
           image_id: newImage.id,
           tag_id: job.data.tagId
         });
-      if (tagError) throw tagError;
+      
+      if (tagError) {
+        console.error('Error vinculando tag:', tagError);
+        throw tagError;
+      }
+      
+      console.log('Tag vinculado exitosamente:', {
+        image_id: newImage.id,
+        tag_id: job.data.tagId
+      });
     }
 
     return { ...newImage, dorsals };

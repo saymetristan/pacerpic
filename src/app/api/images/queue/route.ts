@@ -35,6 +35,11 @@ export async function POST(req: Request) {
 
     console.log('Request data:', { eventId, photographerId, fileName: file.name });
 
+    // Validar que el tagId exista si se proporciona
+    if (tagId) {
+      console.log('Tag ID recibido:', tagId);
+    }
+
     // Verificar si existe el bucket
     const { data: buckets } = await supabaseAdmin.storage.listBuckets();
     const originalsExists = buckets?.some(b => b.name === 'originals');
