@@ -107,14 +107,22 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     let watermarkUrl;
     if (isVertical) {
       // Para imágenes verticales
-      watermarkUrl = Math.abs(aspectRatio - 9/16) < Math.abs(aspectRatio - 3/4) 
-        ? WATERMARK_VERTICAL169 
-        : WATERMARK_VERTICAL;
+      if (Math.abs(aspectRatio - 1) < 0.1) {
+        watermarkUrl = WATERMARK_CUADRADO;
+      } else {
+        watermarkUrl = Math.abs(aspectRatio - 9/16) < Math.abs(aspectRatio - 3/4) 
+          ? WATERMARK_VERTICAL169 
+          : WATERMARK_VERTICAL;
+      }
     } else {
       // Para imágenes horizontales
-      watermarkUrl = Math.abs(aspectRatio - 16/9) < Math.abs(aspectRatio - 4/3) 
-        ? WATERMARK_HORIZONTAL169 
-        : WATERMARK_HORIZONTAL;
+      if (Math.abs(aspectRatio - 1) < 0.1) {
+        watermarkUrl = WATERMARK_CUADRADO;
+      } else {
+        watermarkUrl = Math.abs(aspectRatio - 16/9) < Math.abs(aspectRatio - 4/3) 
+          ? WATERMARK_HORIZONTAL169 
+          : WATERMARK_HORIZONTAL;
+      }
     }
 
     const wmResponse = await fetch(watermarkUrl);
