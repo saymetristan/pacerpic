@@ -12,15 +12,18 @@ export async function GET(request: Request, { params }: { params: { eventId: str
   try {
     let query = supabase
       .from('images')
-      .select('compressed_url')
+      .select('compressed_url', { count: 'exact' })
       .eq('event_id', params.eventId);
 
     if (tag) {
       query = query.eq('tag', tag);
     }
 
+    const { data: countResult } = await query;
+    const count = countResult?.length || 0;
+
     query = query.range(offset, offset + CHUNK_SIZE - 1);
-    const { data: images, count } = await query;
+    const { data: images } = await query;
 
     if (!images?.length) {
       return new Response(JSON.stringify({ done: true, count }), {
@@ -29,6 +32,7 @@ export async function GET(request: Request, { params }: { params: { eventId: str
     }
 
     const zip = new JSZip();
+    
     await Promise.all(
       images.map(async (image, index) => {
         const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
@@ -40,20 +44,23 @@ export async function GET(request: Request, { params }: { params: { eventId: str
       })
     );
 
-    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    const zipBuffer = await zip.generateAsync({ 
+      type: 'arraybuffer',
+      compression: 'STORE',
+      streamFiles: true
+    });
 
-    return new Response(zipBlob, {
+    return new Response(zipBuffer, {
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Length': zipBlob.size.toString(),
-        'X-Total-Count': count?.toString() || '0',
+        'Content-Length': zipBuffer.byteLength.toString(),
+        'X-Total-Count': count.toString(),
         'X-Current-Offset': offset.toString()
       }
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Error procesando imágenes' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      status: 500
     });
   }
 } 

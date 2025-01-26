@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import JSZip from 'jszip';
 
 interface DownloadButtonProps {
   eventId: string;
@@ -18,6 +19,7 @@ export default function DownloadButton({ eventId, tag }: DownloadButtonProps) {
     setDownloading(true);
     let offset = 0;
     const chunks: Blob[] = [];
+    const zip = new JSZip();
 
     try {
       while (true) {
@@ -31,20 +33,25 @@ export default function DownloadButton({ eventId, tag }: DownloadButtonProps) {
           if (data.done) break;
         }
 
-        const blob = await response.blob();
-        chunks.push(blob);
-        
+        const arrayBuffer = await response.arrayBuffer();
         const totalCount = parseInt(response.headers.get('X-Total-Count') || '0');
-        offset += 20; // CHUNK_SIZE
+        
+        // Agregar directamente al ZIP en lugar de acumular blobs
+        await zip.loadAsync(arrayBuffer);
+        offset += 20;
         setProgress(Math.min((offset / totalCount) * 100, 100));
       }
 
-      // Combinar todos los chunks y descargar
-      const finalBlob = new Blob(chunks, { type: 'application/zip' });
-      const url = URL.createObjectURL(finalBlob);
+      const finalZip = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'STORE',
+        streamFiles: true
+      });
+
+      const url = URL.createObjectURL(finalZip);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `fotos-${tag}.zip`;
+      a.download = `fotos-${tag || 'todas'}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
