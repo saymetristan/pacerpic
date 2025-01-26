@@ -264,7 +264,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${${SUPABASE_URL}/storage/v1/object/public${image.original_url}`)}`, '_blank');
+                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${SUPABASE_URL}/storage/v1/object/public${image.original_url}`)}`, '_blank');
                               }}
                             >
                               <WhatsAppIcon />
@@ -387,7 +387,7 @@ export default function EventGalleryPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`)}`, '_blank');
+                      window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`)}`, '_blank');
                     }}
                   >
                     <WhatsAppIcon />
