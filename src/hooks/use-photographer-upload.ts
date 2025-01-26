@@ -34,8 +34,8 @@ const MAX_RETRIES = 3;
 export function usePhotographerUpload() {
   const { user } = useUser();
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
-  const BATCH_SIZE = 25; // 25 archivos simultáneos
-  const DELAY_BETWEEN_BATCHES = 1000; // 1 segundo entre lotes
+  const BATCH_SIZE = 15;
+  const DELAY_BETWEEN_BATCHES = 500;
 
   const validateFile = (file: File) => {
     if (!VALID_TYPES.includes(file.type)) {
@@ -46,56 +46,26 @@ export function usePhotographerUpload() {
     }
   };
 
-  const uploadSingle = async (file: File, tag: string, retryCount = 0): Promise<void> => {
+  const uploadSingle = async (file: File, tag: string): Promise<void> => {
     const fileName = `${Date.now()}-${file.name}`;
     
     try {
-      validateFile(file);
-      
-      // Estado inicial de compresión
-      setUploadProgress(prev => ({
-        ...prev,
-        [fileName]: { 
-          fileName, 
-          progress: 0,
-          status: 'compressing',
-          retries: retryCount 
-        }
-      }));
-
-      const compressedFile = await compressImageWithProgress(
-        file,
-        (progress) => {
-          setUploadProgress(prev => ({
-            ...prev,
-            [fileName]: { 
-              ...prev[fileName],
-              progress: Math.round(progress * 0.5) // La compresión es 50% del progreso
-            }
-          }));
-        }
-      );
-      
-      console.log('Archivo comprimido:', { 
-        originalSize: file.size, 
-        compressedSize: compressedFile.size 
-      });
-
-      // Preparar y enviar al endpoint
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append('file', file);
       formData.append('tag', tag);
       
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileName]: { fileName, progress: 0, status: 'uploading' }
+      }));
+
       const response = await fetch('/api/upload/photographer', {
         method: 'POST',
         body: formData
       });
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
-      }
-
-      // Actualizar estado a completado
+      if (!response.ok) throw new Error(`Error ${response.status}: ${await response.text()}`);
+      
       setUploadProgress(prev => ({
         ...prev,
         [fileName]: { fileName, progress: 100, status: 'completed' }
@@ -104,12 +74,7 @@ export function usePhotographerUpload() {
       const uploadError = error as UploadError;
       setUploadProgress(prev => ({
         ...prev,
-        [fileName]: { 
-          fileName, 
-          progress: 0, 
-          status: 'error',
-          error: uploadError.message 
-        }
+        [fileName]: { fileName, progress: 0, status: 'error', error: uploadError.message }
       }));
       throw uploadError;
     }

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -17,9 +18,17 @@ export async function POST(req: Request) {
   const tag = formData.get('tag') as string;
 
   try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    const compressedBuffer = await sharp(buffer)
+      .resize(1300, 1300, { fit: 'inside' })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer();
+
     const { data, error } = await supabase.storage
       .from('juntos')
-      .upload(`${tag}/${file.name}`, file, {
+      .upload(`${tag}/${file.name}`, compressedBuffer, {
+        contentType: 'image/jpeg',
         upsert: true
       });
 
