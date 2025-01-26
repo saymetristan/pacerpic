@@ -102,6 +102,7 @@ export default function EventGalleryPage() {
         const imagesResponse = await fetch(`/api/events/${params.eventId}/images`);
         const imagesData = await imagesResponse.json();
         console.log('Total de imágenes recibidas:', imagesData.length);
+        console.log('Imágenes recibidas en el cliente:', imagesData);
         setImages(imagesData);
       } catch (error) {
         console.error('Error en fetch:', error);
