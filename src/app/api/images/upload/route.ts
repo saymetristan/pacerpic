@@ -38,9 +38,31 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await processImage(buffer, file.name, eventId, photographerId, accessToken, tag);
+    if (!buffer.length) {
+      return NextResponse.json(
+        { error: 'Buffer de imagen inválido' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(result);
+    try {
+      const result = await processImage(
+        buffer,
+        file.name,
+        eventId,
+        photographerId,
+        accessToken,
+        tag
+      );
+
+      return NextResponse.json(result);
+    } catch (error: any) {
+      console.error('Error detallado:', error);
+      return NextResponse.json(
+        { error: error.message || 'Error procesando imagen' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error procesando imagen:', error);
     return NextResponse.json(

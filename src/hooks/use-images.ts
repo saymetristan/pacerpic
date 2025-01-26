@@ -18,7 +18,7 @@ export function useImages() {
 
   const uploadEventImage = async (file: File, eventId: string, tag: string) => {
     setIsUploading(true);
-    const fileName = file.name;
+    const fileName = `${Date.now()}-${file.name}`;
     
     if (!user?.sub) {
       console.error('Usuario no autenticado');
@@ -30,16 +30,24 @@ export function useImages() {
       const compressedFile = await imageCompression(file, {
         maxSizeMB: 5,
         maxWidthOrHeight: 4096,
-        useWebWorker: true
+        useWebWorker: true,
+        fileType: 'image/jpeg'
+      });
+
+      const processedFile = new File([compressedFile], fileName, {
+        type: 'image/jpeg'
       });
 
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append('file', processedFile);
       formData.append('eventId', eventId);
       formData.append('photographerId', user.sub);
       formData.append('tag', tag);
 
       const response = await axios.post('/api/images/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
           setUploadProgress(prev => ({

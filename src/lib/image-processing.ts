@@ -118,10 +118,14 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
-        upsert: true
+        upsert: true,
+        duplex: 'half'
       });
 
-    if (originalError) throw originalError;
+    if (originalError) {
+      console.error('Error subiendo imagen:', originalError);
+      throw originalError;
+    }
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
@@ -130,7 +134,6 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         event_id: eventId,
         photographer_id: photographerId,
         original_url: originalPath,
-        compressed_url: originalPath,
         status: 'processed',
         tags: tag ? [tag] : []
       })
