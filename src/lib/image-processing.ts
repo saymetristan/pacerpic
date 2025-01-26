@@ -7,6 +7,8 @@ const openai = new OpenAI({
 });
 const WATERMARK_VERTICAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcoVerticalv2.png';
 const WATERMARK_HORIZONTAL = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcoHorizontalv2.png';
+const WATERMARK_HORIZONTAL169 = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcohorizontal169.png';
+const WATERMARK_VERTICAL169 = 'https://wdddgjpmoxhfzehbhlvf.supabase.co/storage/v1/object/public/publib-pacerpic-image/marcos-juntos/marcovertical169.png';
 
 export async function processImage(
   file: Buffer, 
@@ -96,8 +98,24 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     // 3. Procesar imagen original con marca de agua
     const meta = await sharp(file).metadata();
-    const isVertical = (meta.height || 0) > (meta.width || 0);
-    const watermarkUrl = isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL;
+    const width = meta.width || 0;
+    const height = meta.height || 0;
+    const aspectRatio = width / height;
+    const isVertical = height > width;
+
+    let watermarkUrl;
+    if (isVertical) {
+      // Para imágenes verticales
+      watermarkUrl = Math.abs(aspectRatio - 9/16) < Math.abs(aspectRatio - 3/4) 
+        ? WATERMARK_VERTICAL169 
+        : WATERMARK_VERTICAL;
+    } else {
+      // Para imágenes horizontales
+      watermarkUrl = Math.abs(aspectRatio - 16/9) < Math.abs(aspectRatio - 4/3) 
+        ? WATERMARK_HORIZONTAL169 
+        : WATERMARK_HORIZONTAL;
+    }
+
     const wmResponse = await fetch(watermarkUrl);
     const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
 
