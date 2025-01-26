@@ -24,7 +24,7 @@ const routes = [
   {
     label: "Subir Imágenes",
     icon: Upload,
-    href: "/photographer/upload",
+    href: "/photographer",
   }
 ];
 
