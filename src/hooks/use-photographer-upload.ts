@@ -45,11 +45,7 @@ export function usePhotographerUpload() {
   };
 
   const uploadSingle = async (file: File, tag: string, retryCount = 0): Promise<void> => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('Variables de entorno faltantes:', {
-        url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        key: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      });
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('Configuración incompleta');
     }
 
@@ -97,7 +93,7 @@ export function usePhotographerUpload() {
         console.log('URL de subida:', url);
 
         xhr.open('POST', url);
-        xhr.setRequestHeader('Authorization', `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`);
         xhr.setRequestHeader('x-upsert', 'true');
         xhr.setRequestHeader('Content-Type', 'image/jpeg');
 
