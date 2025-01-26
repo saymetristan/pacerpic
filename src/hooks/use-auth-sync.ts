@@ -6,6 +6,10 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export type UserRole = 'admin' | 'photographer' | 'organizer';
 
+interface Auth0Metadata {
+  role?: string;
+}
+
 export function useAuthSync() {
   const { user, isLoading } = useUser();
   const supabase = createClientComponentClient();
@@ -17,8 +21,8 @@ export function useAuthSync() {
         console.log('Auth0 User Data:', {
           sub: user.sub,
           email: user.email,
-          metadata: user.user_metadata,
-          role: (user.user_metadata as { role?: string })?.role,
+          metadata: user?.user_metadata as Auth0Metadata,
+          role: (user?.user_metadata as Auth0Metadata)?.role || 'photographer',
           raw: user
         });
 
@@ -35,8 +39,8 @@ export function useAuthSync() {
             error: selectError
           });
 
-          const userRole = (user.user_metadata as { role?: UserRole })?.role || 'photographer';
-          console.log('Assigned Role:', userRole);
+          const userRole = (user?.user_metadata as Auth0Metadata)?.role || 'photographer';
+          console.log('Role from Auth0:', userRole);
 
           if (selectError && selectError.code === 'PGRST116') {
             const { error: upsertError } = await supabase

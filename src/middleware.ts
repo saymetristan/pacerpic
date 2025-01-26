@@ -11,7 +11,7 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
     return NextResponse.redirect(new URL('/api/auth/login', baseUrl));
   }
 
-  const userRole = (session.user.user_metadata as { role?: string })?.role;
+  const userRole = session?.user?.user_metadata?.role;
 
   // Rutas protegidas por rol
   if (req.nextUrl.pathname.startsWith('/admin') && userRole !== 'admin') {
@@ -25,6 +25,12 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
   if (req.nextUrl.pathname.startsWith('/organizer') && userRole !== 'organizer') {
     return NextResponse.redirect(new URL('/', baseUrl));
   }
+
+  console.log('Session user:', {
+    metadata: session?.user?.user_metadata,
+    role: session?.user?.user_metadata?.role,
+    raw: session?.user
+  });
 
   res.headers.set('Access-Control-Allow-Origin', '*');
   res.headers.set('Access-Control-Allow-Methods', 'GET, POST');
