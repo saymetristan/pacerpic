@@ -1,3 +1,5 @@
+"use client";
+
 import { DashboardProvider } from '@/components/providers/dashboard-provider';
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useEffect } from 'react';
