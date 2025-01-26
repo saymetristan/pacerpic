@@ -30,7 +30,7 @@ export async function GET(
 
     const { count } = await supabase
       .from('images')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact' })
       .eq('event_id', eventId);
 
     console.log('Total de imágenes en la base de datos:', count);
@@ -46,7 +46,8 @@ export async function GET(
         image_dorsals(dorsal_number, confidence)
       `)
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true })
+      .limit(5000);
 
     if (error) {
       return new Response('Error al obtener imágenes', { status: 500 });
