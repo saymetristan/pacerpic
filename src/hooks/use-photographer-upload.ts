@@ -54,7 +54,7 @@ export function usePhotographerUpload() {
     }
 
     const fileName = `${Date.now()}-${file.name}`;
-    const filePath = `${tag}/${fileName}`;
+    const filePath = `${tag.replace(/\s+/g, '_')}/${fileName}`;
     
     console.log('Iniciando subida:', { fileName, filePath, fileSize: file.size, fileType: file.type });
 
@@ -93,7 +93,7 @@ export function usePhotographerUpload() {
 
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/photos/${filePath}`;
+        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/juntos/${filePath}`;
         console.log('URL de subida:', url);
 
         xhr.open('POST', url);
