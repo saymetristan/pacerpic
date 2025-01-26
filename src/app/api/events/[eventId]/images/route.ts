@@ -57,7 +57,8 @@ export async function GET(
         image_dorsals(dorsal_number, confidence)
       `)
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(0, 999);
 
     console.log('Query de imágenes error:', error);
     console.log('Datos crudos de Supabase:', data);
