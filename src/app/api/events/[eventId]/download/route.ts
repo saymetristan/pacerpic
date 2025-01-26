@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { eventId: str
   try {
     let query = supabase
       .from('images')
-      .select('compressed_url', { count: 'exact' })
+      .select('original_url', { count: 'exact' })
       .eq('event_id', params.eventId);
 
     if (tag) {
@@ -35,7 +35,7 @@ export async function GET(request: Request, { params }: { params: { eventId: str
     
     await Promise.all(
       images.map(async (image, index) => {
-        const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
+        const imageUrl = `${STORAGE_URL}/originals/${image.original_url}`;
         const response = await fetch(imageUrl);
         if (response.ok) {
           const buffer = await response.arrayBuffer();
