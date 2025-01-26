@@ -43,7 +43,7 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // 1. Generar copia 1300x1300 para OpenAI
+    // 1. Generar copia para OpenAI (temporal)
     const aiCopyBuffer = await sharp(file)
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
@@ -94,53 +94,34 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       dorsal_number: []
     };
 
-    // 3. Comprimir imagen original a <5MB (ajustar calidad si quieres más control)
-    let compressedOriginal = await sharp(file)
-      .jpeg({ quality: 85, chromaSubsampling: '4:2:0', mozjpeg: true })
-      .toBuffer();
-    while (compressedOriginal.byteLength > 5 * 1024 * 1024) {
-      compressedOriginal = await sharp(compressedOriginal)
-        .jpeg({ quality: 75, chromaSubsampling: '4:2:0', mozjpeg: true })
-        .toBuffer();
-    }
-
-    // 4. Detectar orientación y aplicar watermark
-    const meta = await sharp(compressedOriginal).metadata();
+    // 3. Procesar imagen original con marca de agua
+    const meta = await sharp(file).metadata();
     const isVertical = (meta.height || 0) > (meta.width || 0);
     const watermarkUrl = isVertical ? WATERMARK_VERTICAL : WATERMARK_HORIZONTAL;
     const wmResponse = await fetch(watermarkUrl);
     const watermarkBuf = Buffer.from(await wmResponse.arrayBuffer());
+
     const resizedWM = await sharp(watermarkBuf)
       .resize(meta.width, meta.height, { fit: 'fill' })
       .png()
       .toBuffer();
-    const finalImageWithWM = await sharp(compressedOriginal)
+
+    const finalImageWithWM = await sharp(file)
       .composite([{ input: resizedWM, gravity: 'center' }])
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer();
 
-    // 5. Subir a buckets (ejemplo: bucket originals y compressed)
+    // 4. Subir imagen con marca de agua
     const originalPath = `originals/${eventId}/${fileName}`;
-    const compressedPath = `compressed/${eventId}/${fileName}`;
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
+        contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: true
       });
-    if (originalError) {
-      throw originalError;
-    }
 
-    const { error: compressedError } = await supabase.storage
-      .from('compressed')
-      .upload(compressedPath, finalImageWithWM, {
-        cacheControl: '3600',
-        upsert: true
-      });
-    if (compressedError) {
-      throw compressedError;
-    }
+    if (originalError) throw originalError;
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
@@ -149,7 +130,6 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         event_id: eventId,
         photographer_id: photographerId,
         original_url: originalPath,
-        compressed_url: compressedPath,
         status: 'processed',
         tags: tag ? [tag] : []
       })
