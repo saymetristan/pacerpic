@@ -1,0 +1,38 @@
+:root {
+  --primary: #1B1863;
+  --secondary: #C9384E;
+  --white: #FFFFFF;
+}
+
+.embed-container {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-input:focus {
+  border-color: var(--secondary);
+}
+
+.search-button {
+  background: var(--secondary);
+}
+
+.search-button:hover {
+  background: rgba(201, 56, 78, 0.9);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    gap: 1rem;
+  }
+} 

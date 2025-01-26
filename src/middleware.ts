@@ -15,9 +15,13 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
     }
   }
 
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+
   return res;
 });
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/images/upload']
+  matcher: ['/admin/:path*', '/api/images/upload', '/embed/:path*'],
 }; 
