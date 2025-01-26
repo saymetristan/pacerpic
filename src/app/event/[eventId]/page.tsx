@@ -179,12 +179,12 @@ export default function EventGalleryPage() {
                   >
                     <div className="relative w-full">
                       <Image
-                        src={`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`}
-                        alt={`Foto del evento ${event?.name}`}
+                        src={`${SUPABASE_URL}/storage/v1/object/public${image.compressed_url}`}
+                        alt={`Foto ${index + 1} del evento ${event?.name}`}
                         width={500}
                         height={500}
-                        className="w-full h-auto"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                        className="w-full h-auto rounded-lg transition-all duration-300"
+                        priority={index < 4}
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
