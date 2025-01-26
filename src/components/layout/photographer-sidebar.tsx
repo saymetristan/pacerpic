@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Upload, ChevronLeft, User, ChevronUp, LogOut } from "lucide-react";
+import { Upload, ChevronLeft, User, ChevronUp, LogOut, Cog } from "lucide-react";
 import { useUser } from '@auth0/nextjs-auth0/client';
 import {
   DropdownMenu,
@@ -25,6 +25,11 @@ const routes = [
     label: "Subir Imágenes",
     icon: Upload,
     href: "/photographer",
+  },
+  {
+    label: "Procesar",
+    icon: Cog,
+    href: "/photographer/process",
   }
 ];
 
