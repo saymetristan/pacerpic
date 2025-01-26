@@ -19,6 +19,8 @@ interface SupabaseResponse {
 export async function GET() {
   try {
     const session = await getSession()
+    console.log("Session:", session?.user)
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
@@ -28,46 +30,47 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Debug: Obtener el usuario
+    // 1. Debug usuario
     const { data: dbUser, error: userError } = await supabase
       .from('users')
-      .select('id')
+      .select('*')  // Cambiado para ver todos los campos
       .eq('auth0_id', session.user.sub)
       .single()
 
-    console.log('Auth0 sub:', session.user.sub)
-    console.log('DB User:', dbUser)
-    console.log('User Error:', userError)
+    console.log("DB User completo:", dbUser)
+    console.log("User Error:", userError)
 
     if (!dbUser || userError) {
-      return NextResponse.json({ error: 'Usuario inválido' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Usuario inválido', 
+        details: userError,
+        auth0_id: session.user.sub 
+      }, { status: 400 })
     }
 
-    // Debug: Obtener tags
-    const { data: tags, error: tagsError } = await supabase
+    // 2. Debug consulta de tags
+    const { data: userTags, error: tagsError } = await supabase
       .from('user_tags')
-      .select(`
-        tags (
-          id,
-          name
-        )
-      `)
-      .eq('user_id', dbUser.id) as SupabaseResponse
+      .select('*')  // Primero veamos todos los campos
+      .eq('user_id', dbUser.id)
 
-    console.log('User ID:', dbUser.id)
-    console.log('Tags:', tags)
-    console.log('Tags Error:', tagsError)
+    console.log("User Tags raw:", userTags)
+    console.log("Tags Error:", tagsError)
 
-    if (tagsError) {
-      return NextResponse.json({ error: tagsError.message }, { status: 500 })
+    // 3. Si hay user_tags, obtener los tags
+    if (userTags?.length) {
+      const { data: tags, error: tagsDetailError } = await supabase
+        .from('tags')
+        .select('*')
+        .in('id', userTags.map(ut => ut.tag_id))
+
+      console.log("Tags finales:", tags)
+      console.log("Tags Detail Error:", tagsDetailError)
+
+      return NextResponse.json({ tags: tags || [] })
     }
 
-    const formattedTags = tags?.map(t => ({
-      id: t.tags.id,
-      name: t.tags.name
-    })) || []
-
-    return NextResponse.json({ tags: formattedTags })
+    return NextResponse.json({ tags: [] })
   } catch (error) {
     console.error('Error completo:', error)
     return NextResponse.json({ error: String(error) }, { status: 500 })
