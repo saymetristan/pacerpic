@@ -162,37 +162,37 @@ export default function EventGalleryPage() {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-8">
-          <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
-            Galería {event?.name ? `| ${event.name}` : ''}
-          </h1>
-          
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedTag === "" ? "default" : "outline"}
-              onClick={() => setSelectedTag("")}
-              className="text-sm"
-            >
-              Todas
-              {selectedTag === "" && <Check className="ml-2 h-4 w-4" />}
-            </Button>
-            
-            <ScrollArea className="w-full md:w-auto">
-              <div className="flex gap-2 pb-4 md:pb-0">
-                {possibleTags.map(tag => (
-                  <Button
-                    key={tag}
-                    variant={selectedTag === tag ? "default" : "outline"}
-                    onClick={() => setSelectedTag(tag)}
-                    className="whitespace-nowrap text-sm"
-                  >
-                    {tag}
-                    {selectedTag === tag && <Check className="ml-2 h-4 w-4" />}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
+              Galería {event?.name ? `| ${event.name}` : ''}
+            </h1>
           </div>
+
+          <ScrollArea className="w-full">
+            <div className="flex gap-2 pb-2">
+              <Button
+                variant={selectedTag === "" ? "default" : "outline"}
+                onClick={() => setSelectedTag("")}
+                className="shrink-0"
+                size="sm"
+              >
+                Todas las zonas
+              </Button>
+              
+              {possibleTags.map(tag => (
+                <Button
+                  key={tag}
+                  variant={selectedTag === tag ? "default" : "outline"}
+                  onClick={() => setSelectedTag(tag)}
+                  className="shrink-0 whitespace-nowrap"
+                  size="sm"
+                >
+                  {tag}
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
 
         {loading ? (
@@ -213,7 +213,12 @@ export default function EventGalleryPage() {
               columnClassName="pl-6 bg-clip-padding"
             >
               {paginatedImages
-                .filter(image => !selectedTag || (image.tags && image.tags.includes(selectedTag)))
+                .filter(image => {
+                  if (!selectedTag) return true;
+                  return image.tags?.some(tag => 
+                    tag.toLowerCase().includes(selectedTag.toLowerCase())
+                  );
+                })
                 .map((image) => (
                   <div 
                     key={image.id}
