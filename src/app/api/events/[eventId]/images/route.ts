@@ -23,20 +23,30 @@ export async function GET(
   try {
     console.log('Consultando Supabase...');
     
-    // Primero verifica si el evento existe
-    const { data: eventExists } = await supabase
+    // Verifica el evento
+    const { data: eventExists, error: eventError } = await supabase
       .from('events')
-      .select('id')
+      .select('*')
       .eq('id', eventId)
       .single();
+
+    console.log('Datos del evento:', eventExists);
+    if (eventError) console.error('Error al obtener evento:', eventError);
 
     if (!eventExists) {
       console.log('Evento no encontrado');
       return new Response('Evento no encontrado', { status: 404 });
     }
 
-    // Log de la query
-    const query = supabase
+    // Verifica las imágenes
+    const { data: imagesCount } = await supabase
+      .from('images')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId);
+
+    console.log('Total de imágenes para el evento:', imagesCount);
+
+    const { data, error } = await supabase
       .from('images')
       .select(`
         id,
@@ -48,8 +58,7 @@ export async function GET(
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
 
-    const { data, error } = await query;
-
+    console.log('Query de imágenes error:', error);
     console.log('Datos crudos de Supabase:', data);
 
     if (error) {
