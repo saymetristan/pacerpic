@@ -2,46 +2,33 @@ import { supabase } from '@/lib/supabase';
 import JSZip from 'jszip';
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public';
-const CHUNK_SIZE = 50;
+const CHUNK_SIZE = 20;
 
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
   const { searchParams } = new URL(request.url);
   const offset = parseInt(searchParams.get('offset') || '0');
   const tag = searchParams.get('tag');
-  const zip = new JSZip();
   
   try {
     let query = supabase
       .from('images')
-      .select('*', { count: 'exact', head: true })
+      .select('compressed_url')
       .eq('event_id', params.eventId);
 
     if (tag) {
       query = query.eq('tag', tag);
     }
 
-    const { count } = await query;
-
-    if (!count) return new Response('No hay imágenes', { status: 404 });
-
-    let imagesQuery = supabase
-      .from('images')
-      .select('compressed_url')
-      .eq('event_id', params.eventId)
-      .range(offset, offset + CHUNK_SIZE - 1);
-
-    if (tag) {
-      imagesQuery = imagesQuery.eq('tag', tag);
-    }
-
-    const { data: images } = await imagesQuery;
+    query = query.range(offset, offset + CHUNK_SIZE - 1);
+    const { data: images, count } = await query;
 
     if (!images?.length) {
-      return new Response(JSON.stringify({ done: true, count }), { 
+      return new Response(JSON.stringify({ done: true, count }), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    const zip = new JSZip();
     await Promise.all(
       images.map(async (image, index) => {
         const imageUrl = `${STORAGE_URL}/compressed/${image.compressed_url}`;
@@ -53,22 +40,20 @@ export async function GET(request: Request, { params }: { params: { eventId: str
       })
     );
 
-    const zipBlob = await zip.generateAsync({ 
-      type: 'blob',
-      compression: 'STORE'
-    });
+    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 
     return new Response(zipBlob, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Length': zipBlob.size.toString(),
-        'X-Total-Count': count.toString(),
+        'X-Total-Count': count?.toString() || '0',
         'X-Current-Offset': offset.toString()
       }
     });
-
   } catch (error) {
-    console.error('Error:', error);
-    return new Response('Error interno', { status: 500 });
+    return new Response(JSON.stringify({ error: 'Error procesando imágenes' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 } 
