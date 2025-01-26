@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import Masonry from 'react-masonry-css';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Head from 'next/head';
+import { useInView } from 'react-intersection-observer';
 
 interface EventImage {
   id: string;
@@ -78,6 +79,7 @@ export default function EventGalleryPage() {
   const ITEMS_PER_PAGE = 50;
   const { toast } = useToast();
   const [selectedTag, setSelectedTag] = useState<string>("");
+  const { ref, inView } = useInView();
 
   const handleDorsalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
@@ -110,6 +112,12 @@ export default function EventGalleryPage() {
 
     fetchEventData();
   }, [params.eventId]);
+
+  useEffect(() => {
+    if (inView && hasMore) {
+      setPage(p => p + 1);
+    }
+  }, [inView, hasMore]);
 
   const filteredImages = images.filter(image => {
     if (!selectedTag) return true;
@@ -356,13 +364,8 @@ export default function EventGalleryPage() {
               </Masonry>
 
               {hasMore && (
-                <div className="mt-8 text-center">
-                  <Button
-                    onClick={() => setPage(p => p + 1)}
-                    className="bg-[#1A3068] hover:bg-[#1A3068]/90 text-white"
-                  >
-                    Cargar más fotos
-                  </Button>
+                <div ref={ref} className="w-full h-20 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-[#EC6533] border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
             </>
