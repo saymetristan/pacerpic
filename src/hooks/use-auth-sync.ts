@@ -20,15 +20,13 @@ export function useAuthSync() {
       if (!isLoading && user) {
         // Intentamos obtener el rol de diferentes ubicaciones
         const role = 
-          (user.app_metadata as Auth0Metadata)?.role || 
-          user['https://pacerpic.com/role'] ||
+          (user as any)['https://pacerpic.com/roles']?.[0]?.toLowerCase() || 
           'photographer';
 
         console.log('Auth0 User Data:', {
           sub: user.sub,
           email: user.email,
-          app_metadata: user.app_metadata,
-          custom_claims: user['https://pacerpic.com/role'],
+          roles: (user as any)['https://pacerpic.com/roles'],
           assigned_role: role,
           raw: user
         });

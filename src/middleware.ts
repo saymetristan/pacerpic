@@ -12,8 +12,8 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
   }
 
   const userRole = 
-    session?.user?.app_metadata?.role || 
-    session?.user?.['https://pacerpic.com/role'];
+    (session?.user as any)['https://pacerpic.com/roles']?.[0]?.toLowerCase() || 
+    'photographer';
 
   // Rutas protegidas por rol
   if (req.nextUrl.pathname.startsWith('/admin') && userRole !== 'admin') {
