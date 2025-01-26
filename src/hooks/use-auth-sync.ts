@@ -8,6 +8,7 @@ export type UserRole = 'admin' | 'photographer' | 'organizer';
 
 interface Auth0Metadata {
   role?: string;
+  [key: string]: any;
 }
 
 export function useAuthSync() {
@@ -17,12 +18,18 @@ export function useAuthSync() {
   useEffect(() => {
     async function syncUser() {
       if (!isLoading && user) {
-        // Log completo del usuario de Auth0
+        // Intentamos obtener el rol de diferentes ubicaciones
+        const role = 
+          (user.app_metadata as Auth0Metadata)?.role || 
+          user['https://pacerpic.com/role'] ||
+          'photographer';
+
         console.log('Auth0 User Data:', {
           sub: user.sub,
           email: user.email,
-          metadata: user?.app_metadata as Auth0Metadata,
-          role: (user?.app_metadata as Auth0Metadata)?.role || 'photographer',
+          app_metadata: user.app_metadata,
+          custom_claims: user['https://pacerpic.com/role'],
+          assigned_role: role,
           raw: user
         });
 
@@ -39,15 +46,14 @@ export function useAuthSync() {
             error: selectError
           });
 
-          const userRole = (user?.app_metadata as Auth0Metadata)?.role || 'photographer';
-          console.log('Role from Auth0:', userRole);
+          console.log('Role from Auth0:', role);
 
           if (selectError && selectError.code === 'PGRST116') {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
                 auth0_id: user.sub,
-                role: userRole,
+                role: role,
                 email: user.email,
                 name: user.name
               }, {

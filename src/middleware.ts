@@ -11,7 +11,9 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
     return NextResponse.redirect(new URL('/api/auth/login', baseUrl));
   }
 
-  const userRole = session?.user?.app_metadata?.role;
+  const userRole = 
+    session?.user?.app_metadata?.role || 
+    session?.user?.['https://pacerpic.com/role'];
 
   // Rutas protegidas por rol
   if (req.nextUrl.pathname.startsWith('/admin') && userRole !== 'admin') {
