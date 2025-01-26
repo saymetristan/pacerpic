@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from './providers';
 import { AuthSync } from '@/components/auth/auth-sync';
 import { UserProvider } from '@auth0/nextjs-auth0/client';
+import Head from 'next/head';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,6 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      </Head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <UserProvider>
           <AuthSync>

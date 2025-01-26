@@ -112,6 +112,9 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @layer base {
@@ -165,4 +168,11 @@ body {
 
 .driver-popover.custom-popover .driver-popover-footer button:hover {
   background: #d55a2e;
+}
+
+/* Prevenir el scroll del body cuando el dropdown está abierto en móvil */
+.prevent-scroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }

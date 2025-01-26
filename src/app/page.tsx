@@ -58,10 +58,10 @@ export default function Home() {
                 <Users className="h-12 w-12 text-[#EC6533]" />
               </div>
               <h3 className="text-2xl font-semibold text-[#1A3068] mb-4">
-              Potencia tu Evento con Pacerpic
+              Potencia tu Evento con PacerPic
               </h3>
               <p className="text-gray-600 mb-4">
-              Transforma la manera en que gestionas y presentas tus eventos deportivos. Pacerpic ofrece soluciones intuitivas para que tanto organizadores como participantes disfruten de una experiencia inigualable.
+              Transforma la manera en que gestionas y presentas tus eventos deportivos. PacerPic ofrece soluciones intuitivas para que tanto organizadores como participantes disfruten de una experiencia inigualable.
               </p>
             </MagicCard>
 
@@ -175,7 +175,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-lg md:text-xl mb-8 text-[#4A4A4A]"
             >
-              Simplifica la administración de tus eventos deportivos y enriquece la experiencia de tus participantes con nuestra plataforma intuitiva. Pacerpic no solo mejora la gestión, sino que también añade valor a cada carrera, creando recuerdos duraderos para todos.
+              Simplifica la administración de tus eventos deportivos y enriquece la experiencia de tus participantes con nuestra plataforma intuitiva. PacerPic no solo mejora la gestión, sino que también añade valor a cada carrera, creando recuerdos duraderos para todos.
             </motion.p>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="border-t border-white/10 pt-8">
               <p className="text-white/50 text-sm text-center">
-                Hecho con 💙 y mucho ☕ desde 🇲🇽 | Pacerpic © {new Date().getFullYear()}. | Todos los derechos reservados.
+                Hecho con 💙 y mucho ☕ desde 🇲🇽 | PacerPic © {new Date().getFullYear()}. | Todos los derechos reservados.
               </p>
             </div>
           </div>
