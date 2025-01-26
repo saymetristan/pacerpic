@@ -21,8 +21,8 @@ export function useAuthSync() {
         console.log('Auth0 User Data:', {
           sub: user.sub,
           email: user.email,
-          metadata: user?.user_metadata as Auth0Metadata,
-          role: (user?.user_metadata as Auth0Metadata)?.role || 'photographer',
+          metadata: user?.app_metadata as Auth0Metadata,
+          role: (user?.app_metadata as Auth0Metadata)?.role || 'photographer',
           raw: user
         });
 
@@ -39,7 +39,7 @@ export function useAuthSync() {
             error: selectError
           });
 
-          const userRole = (user?.user_metadata as Auth0Metadata)?.role || 'photographer';
+          const userRole = (user?.app_metadata as Auth0Metadata)?.role || 'photographer';
           console.log('Role from Auth0:', userRole);
 
           if (selectError && selectError.code === 'PGRST116') {
