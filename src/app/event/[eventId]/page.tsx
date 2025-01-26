@@ -23,7 +23,7 @@ interface EventImage {
   id: string;
   original_url: string;
   created_at: string;
-  tags?: string[];
+  tag?: string;
   dorsals: {
     number: string;
     confidence: number;
@@ -99,7 +99,7 @@ export default function EventGalleryPage() {
         
         const imagesData = await imagesResponse.json();
         console.log('Imágenes recibidas:', imagesData);
-        console.log('Tags de la primera imagen:', imagesData[0]?.tags);
+        console.log('Tag de la primera imagen:', imagesData.tag);
 
         setImages(imagesData);
       } catch (error) {
@@ -228,12 +228,11 @@ export default function EventGalleryPage() {
                 .filter(image => {
                   console.log('Filtrando imagen:', {
                     imageId: image.id,
-                    imageTags: image.tags,
-                    selectedTag,
-                    match: !selectedTag || image.tags?.includes(selectedTag)
+                    imageTag: image.tag,
+                    selectedTag
                   });
                   if (!selectedTag) return true;
-                  return image.tags?.includes(selectedTag);
+                  return image.tag === selectedTag;
                 })
                 .map((image) => (
                   <div 

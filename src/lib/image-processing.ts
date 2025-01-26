@@ -171,7 +171,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         original_url: originalPath,
         compressed_url: compressedPath,
         status: 'processed',
-        tags: tag ? [tag] : []
+        tag: tag || null
       })
       .select()
       .single();
