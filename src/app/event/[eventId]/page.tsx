@@ -168,7 +168,7 @@ export default function EventGalleryPage() {
               className="flex w-auto -ml-6"
               columnClassName="pl-6 bg-clip-padding"
             >
-              {paginatedImages.map((image) => (
+              {paginatedImages.map((image, index) => (
                 <div 
                   key={image.id}
                   className="mb-6 cursor-pointer relative group"
@@ -195,7 +195,7 @@ export default function EventGalleryPage() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            const response = await fetch(image.original_url);
+                            const response = await fetch(`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`);
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
@@ -225,7 +225,7 @@ export default function EventGalleryPage() {
                                 navigator.share({
                                   title: event?.name || 'Foto del evento',
                                   text: `Mira esta foto del evento ${event?.name}`,
-                                  url: image.original_url
+                                  url: `${SUPABASE_URL}/storage/v1/object/public${image.original_url}`
                                 });
                               }
                             }}
@@ -237,7 +237,7 @@ export default function EventGalleryPage() {
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuItem
                               onClick={() => {
-                                navigator.clipboard.writeText(image.original_url);
+                                navigator.clipboard.writeText(`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`);
                                 toast({
                                   description: "URL copiada al portapapeles",
                                 });
@@ -248,7 +248,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(image.original_url)}`, '_blank');
+                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`)}`, '_blank');
                               }}
                             >
                               <FacebookIcon className="mr-2 h-4 w-4" />
@@ -256,7 +256,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(image.original_url)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
+                                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
                               }}
                             >
                               <TwitterIcon className="mr-2 h-4 w-4" />
@@ -264,7 +264,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${image.original_url}`)}`, '_blank');
+                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${${SUPABASE_URL}/storage/v1/object/public${image.original_url}`)}`, '_blank');
                               }}
                             >
                               <WhatsAppIcon />
@@ -318,7 +318,7 @@ export default function EventGalleryPage() {
               onClick={async (e) => {
                 e.stopPropagation();
                 try {
-                  const response = await fetch(selectedImage.original_url);
+                  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`);
                   const blob = await response.blob();
                   const url = window.URL.createObjectURL(blob);
                   const link = document.createElement('a');
@@ -348,7 +348,7 @@ export default function EventGalleryPage() {
                       navigator.share({
                         title: event?.name || 'Foto del evento',
                         text: `Mira esta foto del evento ${event?.name}`,
-                        url: selectedImage.original_url
+                        url: `${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`
                       });
                     }
                   }}
@@ -360,7 +360,7 @@ export default function EventGalleryPage() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem
                     onClick={() => {
-                      navigator.clipboard.writeText(selectedImage.original_url);
+                      navigator.clipboard.writeText(`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`);
                       toast({
                         description: "URL copiada al portapapeles",
                       });
@@ -371,7 +371,7 @@ export default function EventGalleryPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(selectedImage.original_url)}`, '_blank');
+                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`)}`, '_blank');
                     }}
                   >
                     <FacebookIcon className="mr-2 h-4 w-4" />
@@ -379,7 +379,7 @@ export default function EventGalleryPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(selectedImage.original_url)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
+                      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
                     }}
                   >
                     <TwitterIcon className="mr-2 h-4 w-4" />
@@ -387,7 +387,7 @@ export default function EventGalleryPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${selectedImage.original_url}`)}`, '_blank');
+                      window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`)}`, '_blank');
                     }}
                   >
                     <WhatsAppIcon />

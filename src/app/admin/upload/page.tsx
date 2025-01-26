@@ -1,19 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UploadHeader } from "@/components/upload/upload-header";
 import { UploadZone } from "@/components/upload/upload-zone";
 import { UploadProgress } from "@/components/upload/upload-progress";
 import { useImages } from "@/hooks/use-images";
+import { useEvents } from "@/hooks/use-events";
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
 
 export default function UploadPage() {
+  const { user } = useUser();
+  const { singleEvent, loading: eventsLoading } = useEvents(user?.sub);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const { uploadEventImage, uploadProgress } = useImages();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const files = Object.values(uploadProgress);
+
+  // Establecer automáticamente el evento único si existe
+  useEffect(() => {
+    if (singleEvent) {
+      setSelectedEventId(singleEvent.id);
+    }
+  }, [singleEvent]);
 
   const handleFileSelection = (acceptedFiles: File[]) => {
     setSelectedFiles(prev => [...prev, ...acceptedFiles]);
@@ -24,7 +35,7 @@ export default function UploadPage() {
       await Promise.all(
         selectedFiles.map(file => uploadEventImage(file, selectedEventId))
       );
-      setSelectedFiles([]); // Limpiar archivos después de procesar
+      setSelectedFiles([]);
     } catch (err) {
       console.error("Error al subir las imágenes:", err);
     }
@@ -34,9 +45,15 @@ export default function UploadPage() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  if (eventsLoading) {
+    return <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EC6533]" />
+    </div>;
+  }
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col p-8">
-      <UploadHeader onEventChange={setSelectedEventId} />
+      {!singleEvent && <UploadHeader onEventChange={setSelectedEventId} />}
       
       {selectedEventId && (
         <div className="flex-1 grid gap-6 lg:grid-cols-[1fr,400px] mt-8 h-[calc(100%-5rem)]">

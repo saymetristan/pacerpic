@@ -24,8 +24,9 @@ interface Event {
   images: Image[];
 }
 
-export function useEvents(userId?: string) {
+export function useEvents(userId?: string | null) {
   const [events, setEvents] = useState<Event[]>([]);
+  const [singleEvent, setSingleEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,12 +43,18 @@ export function useEvents(userId?: string) {
 
         if (error) throw error;
 
-        // Si hay userId, filtra los eventos
         const filteredData = userId 
           ? data.filter(event => event.organizer_id === userId)
           : data;
 
         setEvents(filteredData || []);
+        
+        // Si solo hay un evento, lo guardamos en singleEvent
+        if (filteredData.length === 1) {
+          setSingleEvent(filteredData[0]);
+        } else {
+          setSingleEvent(null);
+        }
       } catch (err) {
         console.error('Error al obtener eventos:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -59,5 +66,5 @@ export function useEvents(userId?: string) {
     fetchEvents();
   }, [userId]);
 
-  return { events, loading, error };
+  return { events, singleEvent, loading, error };
 }
