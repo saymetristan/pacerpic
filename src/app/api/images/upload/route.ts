@@ -2,6 +2,12 @@ import { processImage } from '@/lib/image-processing';
 import { NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
+interface ProcessImageError {
+  message: string;
+  code?: string;
+  details?: string;
+}
+
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 export const runtime = 'nodejs';
@@ -56,15 +62,17 @@ export async function POST(req: Request) {
       );
 
       return NextResponse.json(result);
-    } catch (error: any) {
-      console.error('Error detallado:', error);
+    } catch (error: unknown) {
+      const processError = error as ProcessImageError;
+      console.error('Error detallado:', processError);
       return NextResponse.json(
-        { error: error.message || 'Error procesando imagen' },
+        { error: processError.message || 'Error procesando imagen' },
         { status: 500 }
       );
     }
-  } catch (error) {
-    console.error('Error procesando imagen:', error);
+  } catch (error: unknown) {
+    const processError = error as ProcessImageError;
+    console.error('Error procesando imagen:', processError);
     return NextResponse.json(
       { error: 'Error procesando imagen' },
       { status: 500 }
