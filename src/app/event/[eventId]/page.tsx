@@ -135,7 +135,8 @@ export default function EventGalleryPage() {
   }, [selectedTag]);
 
   const breakpointColumns = {
-    default: 4,
+    default: 5,
+    1400: 4,
     1100: 3,
     700: 2,
     500: 1
@@ -257,14 +258,20 @@ export default function EventGalleryPage() {
                       gradientColor="#EC6533"
                     >
                       <div className="relative w-full">
-                        <Image
-                          src={image.original_url}
-                          alt="Foto del evento"
-                          width={500}
-                          height={500}
-                          className="w-full h-auto"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                        />
+                        <div className="relative w-full">
+                          <Image
+                            src={image.original_url}
+                            alt="Foto del evento"
+                            width={500}
+                            height={500}
+                            className="w-full h-full object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                            style={{
+                              aspectRatio: '1/1',
+                              objectFit: 'cover'
+                            }}
+                          />
+                        </div>
                       </div>
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button
