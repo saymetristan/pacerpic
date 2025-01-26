@@ -43,14 +43,14 @@ export async function processImage(
       refresh_token: '',
     });
 
-    // 1. Generar copia para OpenAI (temporal)
-    const aiCopyBuffer = await sharp(file)
+    // 1. Generar copia para OpenAI y comprimida
+    const compressedBuffer = await sharp(file)
       .resize(1300, 1300, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 80 })
       .toBuffer();
 
     // 2. Procesar con OpenAI
-    const base64AI = aiCopyBuffer.toString('base64');
+    const base64AI = compressedBuffer.toString('base64');
     const aiResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -111,21 +111,31 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer();
 
-    // 4. Subir imagen con marca de agua
+    // 4. Subir imágenes
     const originalPath = `originals/${eventId}/${fileName}`;
+    const compressedPath = `compressed/${eventId}/${fileName}`;
+
+    // Subir imagen original con marca de agua
     const { error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
-        upsert: true,
-        duplex: 'half'
+        upsert: true
       });
 
-    if (originalError) {
-      console.error('Error subiendo imagen:', originalError);
-      throw originalError;
-    }
+    if (originalError) throw originalError;
+
+    // Subir versión comprimida (la que usamos para OpenAI)
+    const { error: compressedError } = await supabase.storage
+      .from('compressed')
+      .upload(compressedPath, compressedBuffer, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (compressedError) throw compressedError;
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
