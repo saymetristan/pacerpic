@@ -39,9 +39,9 @@ export async function GET(
     }
 
     // Verifica las imágenes
-    const { data: imagesCount } = await supabase
+    const { count: imagesCount } = await supabase
       .from('images')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('event_id', eventId);
 
     console.log('Total de imágenes para el evento:', imagesCount);
@@ -50,6 +50,7 @@ export async function GET(
       .from('images')
       .select(`
         id,
+        event_id,
         original_url,
         created_at,
         tags,
