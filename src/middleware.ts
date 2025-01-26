@@ -2,6 +2,12 @@ import { withMiddlewareAuthRequired, getSession } from '@auth0/nextjs-auth0/edge
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+interface Auth0Session {
+  user: {
+    'https://pacerpic.com/roles'?: string[];
+  } & Record<string, unknown>;
+}
+
 export default withMiddlewareAuthRequired(async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const session = await getSession(req, res);
@@ -12,7 +18,7 @@ export default withMiddlewareAuthRequired(async function middleware(req: NextReq
   }
 
   const userRole = 
-    (session?.user as any)['https://pacerpic.com/roles']?.[0]?.toLowerCase() || 
+    ((session as Auth0Session)?.user['https://pacerpic.com/roles']?.[0]?.toLowerCase()) || 
     'photographer';
 
   // Rutas protegidas por rol

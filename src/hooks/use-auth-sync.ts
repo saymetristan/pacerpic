@@ -11,6 +11,12 @@ interface Auth0Metadata {
   [key: string]: string | undefined;
 }
 
+interface Auth0User extends Record<string, unknown> {
+  sub: string;
+  email: string;
+  'https://pacerpic.com/roles'?: string[];
+}
+
 export function useAuthSync() {
   const { user, isLoading } = useUser();
   const supabase = createClientComponentClient();
@@ -18,24 +24,22 @@ export function useAuthSync() {
   useEffect(() => {
     async function syncUser() {
       if (!isLoading && user) {
-        // Intentamos obtener el rol de diferentes ubicaciones
-        const role = 
-          (user as any)['https://pacerpic.com/roles']?.[0]?.toLowerCase() || 
-          'photographer';
+        const auth0User = user as Auth0User;
+        const role = auth0User['https://pacerpic.com/roles']?.[0]?.toLowerCase() || 'photographer';
 
         console.log('Auth0 User Data:', {
-          sub: user.sub,
-          email: user.email,
-          roles: (user as any)['https://pacerpic.com/roles'],
+          sub: auth0User.sub,
+          email: auth0User.email,
+          roles: auth0User['https://pacerpic.com/roles'],
           assigned_role: role,
-          raw: user
+          raw: auth0User
         });
 
         try {
           const { data: existingUser, error: selectError } = await supabase
             .from('users')
             .select('*')
-            .eq('auth0_id', user.sub)
+            .eq('auth0_id', auth0User.sub)
             .single();
 
           // Log del usuario en Supabase
@@ -50,10 +54,10 @@ export function useAuthSync() {
             const { error: upsertError } = await supabase
               .from('users')
               .upsert({
-                auth0_id: user.sub,
+                auth0_id: auth0User.sub,
                 role: role,
-                email: user.email,
-                name: user.name
+                email: auth0User.email,
+                name: auth0User.name
               }, {
                 onConflict: 'auth0_id'
               });
