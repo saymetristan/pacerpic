@@ -48,19 +48,11 @@ const WhatsAppIcon = () => (
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const getImageUrl = (originalUrl: string) => {
-  console.log('Construyendo URL:', {
-    original: originalUrl,
-    supabaseUrl: SUPABASE_URL
-  });
-  
   const cleanUrl = originalUrl.startsWith('/') 
     ? originalUrl.substring(1) 
     : originalUrl;
     
-  const fullUrl = `${SUPABASE_URL}/storage/v1/object/public/${cleanUrl}`;
-  
-  console.log('URL final:', fullUrl);
-  return fullUrl;
+  return `${SUPABASE_URL}/storage/v1/object/public/${cleanUrl}`;
 };
 
 export default function EventGalleryPage() {
@@ -90,7 +82,6 @@ export default function EventGalleryPage() {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        console.log('Iniciando fetch de datos...');
         const [imagesResponse, eventResponse] = await Promise.all([
           fetch(`/api/events/${params.eventId}/images`),
           fetch(`/api/events/${params.eventId}`)
@@ -101,18 +92,11 @@ export default function EventGalleryPage() {
           eventResponse.json()
         ]);
 
-        console.log('Datos de imágenes recibidos:', imagesData);
-        console.log('Datos del evento recibidos:', eventData);
-
         setImages(imagesData);
         setEvent(eventData);
       } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error(String(err));
-        console.error('Error detallado:', {
-          message: error.message,
-          stack: error.stack,
-          error
-        });
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
@@ -217,12 +201,6 @@ export default function EventGalleryPage() {
                           height={500}
                           className="w-full h-auto rounded-lg transition-all duration-300"
                           priority={index < 4}
-                          onError={(e) => {
-                            console.error('Error cargando imagen:', {
-                              src: e.currentTarget.src,
-                              imageId: image.id
-                            });
-                          }}
                           unoptimized
                         />
                       </div>
