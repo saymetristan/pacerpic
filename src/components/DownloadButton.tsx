@@ -7,20 +7,23 @@ import { Progress } from '@/components/ui/progress';
 
 interface DownloadButtonProps {
   eventId: string;
+  tag?: string;
 }
 
-const DownloadButton = ({ eventId }: DownloadButtonProps) => {
+export default function DownloadButton({ eventId, tag }: DownloadButtonProps) {
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const handleDownload = async () => {
+    setDownloading(true);
+    setProgress(0);
+    
     try {
-      setDownloading(true);
+      const response = await fetch(`/api/events/${eventId}/download${tag ? `?tag=${tag}` : ''}`);
       let offset = 0;
       const chunks: Blob[] = [];
       
       while (true) {
-        const response = await fetch(`/api/events/${eventId}/download?offset=${offset}`);
         const contentType = response.headers.get('Content-Type');
         
         if (contentType === 'application/json') {
@@ -50,24 +53,27 @@ const DownloadButton = ({ eventId }: DownloadButtonProps) => {
       window.URL.revokeObjectURL(url);
       
     } catch (error) {
-      console.error('Error al descargar:', error);
+      console.error('Error:', error);
     } finally {
       setDownloading(false);
-      setProgress(0);
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button onClick={handleDownload} disabled={downloading}>
-        <Download className="h-4 w-4 mr-2" />
-        {downloading ? 'Descargando...' : 'Descargar todas'}
-      </Button>
-      {downloading && (
-        <Progress value={progress} className="w-[100px]" />
+    <Button 
+      variant="outline" 
+      size="sm"
+      onClick={handleDownload}
+      disabled={downloading}
+    >
+      {downloading ? (
+        <Progress value={progress} className="w-full" />
+      ) : (
+        <>
+          <Download className="h-4 w-4 mr-2" />
+          Descargar
+        </>
       )}
-    </div>
+    </Button>
   );
-};
-
-export default DownloadButton; 
+} 

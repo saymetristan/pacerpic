@@ -12,7 +12,7 @@ export function EventsHeader() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Eventos</h1>
         <p className="text-muted-foreground">
-          Gestiona los eventos deportivos asignados a tu cuenta
+          Gestiona los eventos asignados a tu cuenta
         </p>
       </div>
       <Button 

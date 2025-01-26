@@ -5,23 +5,36 @@ const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/p
 const CHUNK_SIZE = 50;
 
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
-  const zip = new JSZip();
   const { searchParams } = new URL(request.url);
   const offset = parseInt(searchParams.get('offset') || '0');
+  const tag = searchParams.get('tag');
+  const zip = new JSZip();
   
   try {
-    const { count } = await supabase
+    let query = supabase
       .from('images')
       .select('*', { count: 'exact', head: true })
       .eq('event_id', params.eventId);
 
+    if (tag) {
+      query = query.eq('tag', tag);
+    }
+
+    const { count } = await query;
+
     if (!count) return new Response('No hay imágenes', { status: 404 });
 
-    const { data: images } = await supabase
+    let imagesQuery = supabase
       .from('images')
       .select('compressed_url')
       .eq('event_id', params.eventId)
       .range(offset, offset + CHUNK_SIZE - 1);
+
+    if (tag) {
+      imagesQuery = imagesQuery.eq('tag', tag);
+    }
+
+    const { data: images } = await imagesQuery;
 
     if (!images?.length) {
       return new Response(JSON.stringify({ done: true, count }), { 
