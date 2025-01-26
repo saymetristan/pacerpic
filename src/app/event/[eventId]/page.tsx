@@ -7,7 +7,7 @@ import Link from "next/link";
 import { MagicCard } from "@/components/ui/magic-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search, X, ChevronLeft, ChevronRight, Share, Copy, FacebookIcon, TwitterIcon, Maximize2 } from "lucide-react";
+import { Download, Search, X, ChevronLeft, ChevronRight, Share, Copy, FacebookIcon, TwitterIcon, Maximize2, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import { 
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import Masonry from 'react-masonry-css';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface EventImage {
   id: string;
@@ -161,21 +162,37 @@ export default function EventGalleryPage() {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-8">
           <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
             Galería {event?.name ? `| ${event.name}` : ''}
           </h1>
           
-          <select
-            className="border rounded-md p-2 bg-background"
-            value={selectedTag}
-            onChange={(e) => setSelectedTag(e.target.value)}
-          >
-            <option value="">Todas las zonas</option>
-            {possibleTags.map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedTag === "" ? "default" : "outline"}
+              onClick={() => setSelectedTag("")}
+              className="text-sm"
+            >
+              Todas
+              {selectedTag === "" && <Check className="ml-2 h-4 w-4" />}
+            </Button>
+            
+            <ScrollArea className="w-full md:w-auto">
+              <div className="flex gap-2 pb-4 md:pb-0">
+                {possibleTags.map(tag => (
+                  <Button
+                    key={tag}
+                    variant={selectedTag === tag ? "default" : "outline"}
+                    onClick={() => setSelectedTag(tag)}
+                    className="whitespace-nowrap text-sm"
+                  >
+                    {tag}
+                    {selectedTag === tag && <Check className="ml-2 h-4 w-4" />}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
 
         {loading ? (
@@ -196,7 +213,7 @@ export default function EventGalleryPage() {
               columnClassName="pl-6 bg-clip-padding"
             >
               {paginatedImages
-                .filter(image => !selectedTag || image.tags?.includes(selectedTag))
+                .filter(image => !selectedTag || (image.tags && image.tags.includes(selectedTag)))
                 .map((image) => (
                   <div 
                     key={image.id}
