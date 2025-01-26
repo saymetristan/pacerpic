@@ -19,9 +19,7 @@ export default function PhotographerLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
         <DashboardProvider>
-          <PhotographerLayoutContent>
             {children}
-          </PhotographerLayoutContent>
         </DashboardProvider>
       </body>
     </html>
