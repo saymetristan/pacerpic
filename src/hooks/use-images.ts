@@ -16,7 +16,7 @@ export function useImages() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadEventImage = async (file: File, eventId: string) => {
+  const uploadEventImage = async (file: File, eventId: string, tag: string) => {
     setIsUploading(true);
     const fileName = file.name;
     
@@ -37,6 +37,7 @@ export function useImages() {
       formData.append('file', compressedFile);
       formData.append('eventId', eventId);
       formData.append('photographerId', user.sub);
+      formData.append('tag', tag);
 
       const response = await axios.post('/api/images/upload', formData, {
         onUploadProgress: (progressEvent) => {

@@ -13,7 +13,8 @@ export async function processImage(
   fileName: string, 
   eventId: string, 
   photographerId: string,
-  accessToken: string
+  accessToken: string,
+  tag?: string
 ) {
   try {
     const supabase = createClient(
@@ -149,7 +150,8 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         photographer_id: photographerId,
         original_url: originalPath,
         compressed_url: compressedPath,
-        status: 'processed'
+        status: 'processed',
+        tags: tag ? [tag] : []
       })
       .select()
       .single();

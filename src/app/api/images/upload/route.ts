@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     const eventId = formData.get('eventId') as string;
     const photographerId = formData.get('photographerId') as string;
     const accessToken = formData.get('accessToken') as string;
+    const tag = formData.get('tag') as string;
 
     if (!file || !eventId || !photographerId) {
       return NextResponse.json(
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await processImage(buffer, file.name, eventId, photographerId, accessToken);
+    const result = await processImage(buffer, file.name, eventId, photographerId, accessToken, tag);
 
     return NextResponse.json(result);
   } catch (error) {

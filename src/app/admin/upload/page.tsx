@@ -9,10 +9,30 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
 
+// Agrega este arreglo con los posibles tags
+const possibleTags = [
+  "Entrega de Kits Viernes",
+  "Entrega de Kis Sabado",
+  "Salida Meta",
+  "Convivencia Centro de Convenciones",
+  "Entrada Lago",
+  "Salida Lago",
+  "Patrocinadores",
+  "Rampa Centro de Convenciones",
+  "Photo Opportunity 10k",
+  "Entrada Laberinto",
+  "Laberinto Juan Escumbia",
+  "Laberinto Nido",
+  "Generales",
+  "Photo Opportunity 3k, 5k y 10k",
+  "Rifa Ganadores",
+];
+
 export default function UploadPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
-  const { uploadEventImage, uploadProgress } = useImages();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedTag, setSelectedTag] = useState(""); // Nuevo estado para el tag
+  const { uploadEventImage, uploadProgress } = useImages();
   const files = Object.values(uploadProgress);
 
   const handleFileSelection = (acceptedFiles: File[]) => {
@@ -22,9 +42,9 @@ export default function UploadPage() {
   const handleProcess = async () => {
     try {
       await Promise.all(
-        selectedFiles.map(file => uploadEventImage(file, selectedEventId))
+        selectedFiles.map(file => uploadEventImage(file, selectedEventId, selectedTag))
       );
-      setSelectedFiles([]); // Limpiar archivos después de procesar
+      setSelectedFiles([]);
     } catch (err) {
       console.error("Error al subir las imágenes:", err);
     }
@@ -38,6 +58,25 @@ export default function UploadPage() {
     <div className="h-[calc(100vh-4rem)] flex flex-col p-8">
       <UploadHeader onEventChange={setSelectedEventId} />
       
+      {/* Dropdown para la selección del tag. Aplica a todas las imágenes seleccionadas. */}
+      {selectedEventId && (
+        <div className="mb-4 max-w-xs">
+          <label className="block mb-1 font-semibold">Zona / Tag</label>
+          <select
+            className="border rounded p-2 w-full"
+            value={selectedTag}
+            onChange={(e) => setSelectedTag(e.target.value)}
+          >
+            <option value="">Seleccionar...</option>
+            {possibleTags.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {selectedEventId && (
         <div className="flex-1 grid gap-6 lg:grid-cols-[1fr,400px] mt-8 h-[calc(100%-5rem)]">
           <div className="space-y-4">
