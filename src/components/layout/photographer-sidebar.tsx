@@ -40,7 +40,7 @@ export function PhotographerSidebar({ collapsed, onToggle }: SidebarProps) {
     )}>
       <div className="p-4 flex items-center justify-between">
         <Link 
-          href="/photographer" 
+          href="https://pacerpic.com" 
           className={cn(
             "flex items-center",
             collapsed ? "justify-center w-full" : "justify-start"
