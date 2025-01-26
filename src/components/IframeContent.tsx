@@ -1,3 +1,5 @@
+"use client";
+
 import { HeroSection } from "./sections/HeroSection";
 import { SearchForm } from "./search/SearchForm";
 import { MagicCard } from "./ui/magic-card";
