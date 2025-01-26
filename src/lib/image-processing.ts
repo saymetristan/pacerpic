@@ -174,13 +174,13 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .toBuffer();
 
     // 5. Subir a buckets con transformación previa
-    const originalPath = `${eventId}/${fileName}`;
-    const compressedPath = `${eventId}/${fileName}`;
+    const originalUrl = `${eventId}/${fileName}`;
+    const compressedUrl = `${eventId}/${fileName}`;
     
     // Subir versiones pre-transformadas
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalPath, finalImageWithWM, {
+      .upload(originalUrl, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
         cacheControl: 'public, max-age=31536000'
@@ -189,7 +189,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 
     const { error: compressedError } = await supabase.storage
       .from('compressed')
-      .upload(compressedPath, compressedBuffer, {
+      .upload(compressedUrl, compressedBuffer, {
         contentType: 'image/jpeg',
         upsert: true,
         cacheControl: 'public, max-age=31536000'
@@ -197,22 +197,22 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     if (compressedError) throw compressedError;
 
     // Obtener URLs públicas directas
-    const { data: { publicUrl: originalUrl } } = supabase.storage
+    const { data: { publicUrl: originalUrlData } } = supabase.storage
       .from('originals')
-      .getPublicUrl(originalPath);
+      .getPublicUrl(originalUrl);
       
-    const { data: { publicUrl: compressedUrl } } = supabase.storage
+    const { data: { publicUrl: compressedUrlData } } = supabase.storage
       .from('compressed')
-      .getPublicUrl(compressedPath);
+      .getPublicUrl(compressedUrl);
 
-    // 6. Registrar en BD
+    // 6. Registrar en BD con rutas relativas
     const { data: newImage, error: insertError } = await supabase
       .from('images')
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalUrl,
-        compressed_url: compressedUrl,
+        original_url: `/originals/${originalUrl}`,  // Ruta relativa
+        compressed_url: `/compressed/${compressedUrl}`, // Ruta relativa
         status: 'processed'
       })
       .select()

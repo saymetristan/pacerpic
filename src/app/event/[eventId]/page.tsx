@@ -45,6 +45,8 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 export default function EventGalleryPage() {
   const params = useParams();
   const router = useRouter();
@@ -177,7 +179,7 @@ export default function EventGalleryPage() {
                   >
                     <div className="relative w-full">
                       <Image
-                        src={image.original_url}
+                        src={`${SUPABASE_URL}/storage/v1/object/public${image.original_url}`}
                         alt={`Foto del evento ${event?.name}`}
                         width={500}
                         height={500}
@@ -444,7 +446,7 @@ export default function EventGalleryPage() {
           >
             <div className="relative w-full max-w-6xl aspect-[4/3]">
               <Image
-                src={selectedImage.original_url}
+                src={`${SUPABASE_URL}/storage/v1/object/public${selectedImage.original_url}`}
                 alt="Foto del evento"
                 fill
                 className="object-contain"
