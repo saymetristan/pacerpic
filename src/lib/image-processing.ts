@@ -181,13 +181,13 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .toBuffer();
 
     // 5. Subir a buckets con transformación previa
-    const originalUrl = `${eventId}/${fileName}`;
-    const compressedUrl = `${eventId}/${fileName}`;
+    const originalUrl = `originals/${eventId}/${fileName}`;
+    const compressedUrl = `compressed/${eventId}/${fileName}`;
     
     // Subir versiones pre-transformadas
     const { error: originalError } = await supabase.storage
       .from('originals')
-      .upload(originalUrl, finalImageWithWM, {
+      .upload(`${eventId}/${fileName}`, finalImageWithWM, {
         contentType: 'image/jpeg',
         upsert: true,
         cacheControl: '3600',
@@ -223,8 +223,8 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
       .insert({
         event_id: eventId,
         photographer_id: photographerId,
-        original_url: originalUrl,  // Sin /originals/
-        compressed_url: compressedUrl, // Sin /compressed/
+        original_url: originalUrl,  // Ahora incluye 'originals/' al inicio
+        compressed_url: compressedUrl, // Ahora incluye 'compressed/' al inicio
         status: 'processed'
       })
       .select()

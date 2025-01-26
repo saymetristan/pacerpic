@@ -179,7 +179,7 @@ export default function EventGalleryPage() {
                   >
                     <div className="relative w-full">
                       <Image
-                        src={`${SUPABASE_URL}/storage/v1/object/public/originals/${image.original_url}`}
+                        src={`${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`}
                         alt={`Foto ${index + 1} del evento ${event?.name}`}
                         width={500}
                         height={500}
@@ -195,7 +195,7 @@ export default function EventGalleryPage() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            const response = await fetch(`${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`);
+                            const response = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${image.original_url}}`);
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
@@ -225,7 +225,7 @@ export default function EventGalleryPage() {
                                 navigator.share({
                                   title: event?.name || 'Foto del evento',
                                   text: `Mira esta foto del evento ${event?.name}`,
-                                  url: `${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`
+                                  url: `${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`
                                 });
                               }
                             }}
@@ -237,7 +237,7 @@ export default function EventGalleryPage() {
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuItem
                               onClick={() => {
-                                navigator.clipboard.writeText(`${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`);
+                                navigator.clipboard.writeText(`${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`);
                                 toast({
                                   description: "URL copiada al portapapeles",
                                 });
@@ -248,7 +248,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`)}`, '_blank');
+                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`)}`, '_blank');
                               }}
                             >
                               <FacebookIcon className="mr-2 h-4 w-4" />
@@ -256,7 +256,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
+                                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`)}&text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}`)}`, '_blank');
                               }}
                             >
                               <TwitterIcon className="mr-2 h-4 w-4" />
@@ -264,7 +264,7 @@ export default function EventGalleryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${SUPABASE_URL}/storage/v1/object/public${image.original_url.startsWith('/') ? image.original_url.substring(1) : image.original_url}`)}`, '_blank');
+                                window.open(`https://wa.me/?text=${encodeURIComponent(`Mira esta foto del evento ${event?.name}: ${SUPABASE_URL}/storage/v1/object/public/${image.original_url}`)}`, '_blank');
                               }}
                             >
                               <WhatsAppIcon />
@@ -446,7 +446,7 @@ export default function EventGalleryPage() {
           >
             <div className="relative w-full max-w-6xl aspect-[4/3]">
               <Image
-                src={`${SUPABASE_URL}/storage/v1/object/public/originals/${selectedImage.original_url}`}
+                src={`${SUPABASE_URL}/storage/v1/object/public/${selectedImage.original_url}`}
                 alt="Foto del evento"
                 fill
                 className="object-contain"
