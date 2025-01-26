@@ -29,7 +29,7 @@ export async function GET(
         id,
         original_url,
         created_at,
-        image_dorsals!inner(dorsal_number, confidence)
+        image_dorsals(dorsal_number, confidence)
       `)
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
