@@ -137,7 +137,7 @@ export default function EventGalleryPage() {
     1400: 4,
     1100: 3,
     700: 2,
-    500: 1
+    500: 2
   };
 
   return (
