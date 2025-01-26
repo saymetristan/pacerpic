@@ -5,8 +5,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public';
-
 export async function GET(
   request: Request,
   { params }: { params: { eventId: string } }
@@ -34,11 +32,11 @@ export async function GET(
       return new Response('Error al obtener imágenes', { status: 500 });
     }
 
-    const images_with_urls = data?.map(image => ({
+    const images_with_urls = data?.map((image) => ({
       id: image.id,
-      original_url: `${STORAGE_URL}/${image.original_url}`,
+      original_url: image.original_url,
       created_at: image.created_at,
-      dorsals: image.image_dorsals.map(d => ({
+      dorsals: image.image_dorsals.map((d) => ({
         number: d.dorsal_number,
         confidence: d.confidence
       }))
