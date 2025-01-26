@@ -6,6 +6,7 @@ import { usePhotographerUpload } from "@/hooks/use-photographer-upload";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { UploadError } from "../../types/errors";
 
 const possibleTags = [
   "Entrega de Kits Viernes",
@@ -82,10 +83,11 @@ export function PhotographerUpload() {
           variant: "destructive"
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const uploadError = error as UploadError;
       toast({
         title: "Error",
-        description: error.message || "Error al subir las imágenes",
+        description: uploadError.message || "Error al subir las imágenes",
         variant: "destructive"
       });
     }
