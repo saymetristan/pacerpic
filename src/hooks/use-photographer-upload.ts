@@ -34,6 +34,8 @@ const MAX_RETRIES = 3;
 export function usePhotographerUpload() {
   const { user } = useUser();
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
+  const BATCH_SIZE = 25; // 25 archivos simultáneos
+  const DELAY_BETWEEN_BATCHES = 1000; // 1 segundo entre lotes
 
   const validateFile = (file: File) => {
     if (!VALID_TYPES.includes(file.type)) {
@@ -114,15 +116,29 @@ export function usePhotographerUpload() {
   };
 
   const uploadImages = async (files: File[], tag: string) => {
-    const updates = files.map(file => uploadSingle(file, tag));
+    const totalFiles = files.length;
+    const batches = Math.ceil(totalFiles / BATCH_SIZE);
+    let successCount = 0;
     
-    try {
-      await Promise.all(updates);
-      return true;
-    } catch (error) {
-      console.error('Error en la subida:', error);
-      return false;
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+      const batch = files.slice(i, i + BATCH_SIZE);
+      const updates = batch.map(file => uploadSingle(file, tag));
+      
+      try {
+        await Promise.all(updates);
+        successCount += batch.length;
+        console.log(`Progreso: ${successCount}/${totalFiles} (${Math.round(successCount/totalFiles*100)}%)`);
+        
+        if (i + BATCH_SIZE < files.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        }
+      } catch (error) {
+        console.error(`Error en lote ${Math.floor(i/BATCH_SIZE) + 1}/${batches}:`, error);
+        // Continuar con siguiente lote
+      }
     }
+
+    return successCount > 0;
   };
 
   return {
