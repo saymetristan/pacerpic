@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 interface Auth0Session {
   user: {
     'https://pacerpic.com/roles'?: string[];
-    [key: string]: any;
+    [key: string]: string[] | string | undefined;
   };
 }
 
