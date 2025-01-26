@@ -82,6 +82,7 @@ export function PhotographerSidebar({ collapsed, onToggle }: SidebarProps) {
         {routes.map((route) => (
           <Button
             key={route.href}
+            data-tour={route.href.includes('process') ? 'process-link' : undefined}
             variant={pathname === route.href ? "secondary" : "ghost"}
             className={cn(
               "w-full transition-colors duration-200",

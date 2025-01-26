@@ -3,6 +3,7 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { usePhotographerTutorial } from "@/hooks/use-photographer-tutorial";
 
 const tagsByUser: Record<string, string[]> = {
   "rodrigo.foto@pacerpic.com": ["Salida Meta", "Centro de Convenciones"],
@@ -49,6 +50,8 @@ export default function ProcessPage() {
     }
   };
 
+  usePhotographerTutorial('process');
+
   return (
     <div className="container mx-auto p-8">
       <div className="mb-8">
@@ -58,7 +61,10 @@ export default function ProcessPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        data-tour="process-buttons"
+      >
         {userTags.map((tag) => (
           <Button
             key={tag}

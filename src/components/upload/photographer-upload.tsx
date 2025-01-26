@@ -7,6 +7,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UploadError } from "../../types/errors";
+import { usePhotographerTutorial } from "@/hooks/use-photographer-tutorial";
 
 const possibleTags = [
   "Entrega de Kits Viernes",
@@ -32,6 +33,8 @@ export function PhotographerUpload() {
   const [selectedTag, setSelectedTag] = useState("");
   const { uploadImages, uploadProgress, clearProgress } = usePhotographerUpload();
   const { toast } = useToast();
+
+  usePhotographerTutorial('upload');
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -104,7 +107,7 @@ export function PhotographerUpload() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-xs">
+      <div className="max-w-xs" data-tour="zone-select">
         <label className="block mb-2 font-semibold">Zona / Tag *</label>
         <select
           className="w-full p-2 border rounded-md"
@@ -119,7 +122,10 @@ export function PhotographerUpload() {
         </select>
       </div>
 
-      <div {...getRootProps()} className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary">
+      <div {...getRootProps()} 
+        className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary"
+        data-tour="upload-zone"
+      >
         <input {...getInputProps()} />
         <p>Arrastra tus imágenes aquí o haz clic para seleccionarlas</p>
       </div>
@@ -154,6 +160,7 @@ export function PhotographerUpload() {
               onClick={handleUpload}
               disabled={!selectedTag || Object.keys(uploadProgress).length > 0}
               className="bg-[#EC6533] hover:bg-[#EC6533]/90 text-white"
+              data-tour="upload-button"
             >
               {Object.keys(uploadProgress).length > 0 ? 'Subiendo...' : `Subir ${selectedFiles.length} imágenes`}
             </Button>
