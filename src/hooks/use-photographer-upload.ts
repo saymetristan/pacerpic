@@ -45,13 +45,23 @@ export function usePhotographerUpload() {
   };
 
   const uploadSingle = async (file: File, tag: string, retryCount = 0): Promise<void> => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Variables de entorno faltantes:', {
+        url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        key: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      });
+      throw new Error('Configuración incompleta');
+    }
+
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `${tag}/${fileName}`;
+    
+    console.log('Iniciando subida:', { fileName, filePath, fileSize: file.size, fileType: file.type });
 
     try {
       validateFile(file);
+      console.log('Archivo validado correctamente');
       
-      // Comprimir antes de subir
       setUploadProgress(prev => ({
         ...prev,
         [fileName]: { 
@@ -65,23 +75,39 @@ export function usePhotographerUpload() {
       const compressedFile = await compressImageWithProgress(
         file,
         (progress) => {
+          console.log('Progreso compresión:', progress);
           setUploadProgress(prev => ({
             ...prev,
             [fileName]: { 
               ...prev[fileName],
-              progress: Math.round(progress * 0.5) // La compresión es 50% del progreso total
+              progress: Math.round(progress * 0.5)
             }
           }));
         }
       );
+      
+      console.log('Archivo comprimido:', { 
+        originalSize: file.size, 
+        compressedSize: compressedFile.size 
+      });
 
-      // Continuar con la subida del archivo comprimido
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/photos/${filePath}`);
-        
+        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/photos/${filePath}`;
+        console.log('URL de subida:', url);
+
+        xhr.open('POST', url);
         xhr.setRequestHeader('Authorization', `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`);
         xhr.setRequestHeader('x-upsert', 'true');
+        xhr.setRequestHeader('Content-Type', 'image/jpeg');
+
+        xhr.onreadystatechange = () => {
+          console.log('Estado XHR:', { 
+            readyState: xhr.readyState,
+            status: xhr.status,
+            response: xhr.responseText
+          });
+        };
 
         const timeout = setTimeout(() => {
           xhr.abort();
@@ -118,15 +144,25 @@ export function usePhotographerUpload() {
           }
         };
 
-        xhr.onerror = () => {
+        xhr.onerror = (event) => {
+          console.error('Error XHR:', {
+            event,
+            status: xhr.status,
+            response: xhr.responseText,
+            headers: xhr.getAllResponseHeaders()
+          });
+          
           clearTimeout(timeout);
           if (retryCount < MAX_RETRIES) {
+            console.log(`Reintentando subida (${retryCount + 1}/${MAX_RETRIES})`);
             setTimeout(() => {
               uploadSingle(file, tag, retryCount + 1)
                 .then(resolve)
                 .catch(reject);
             }, Math.pow(2, retryCount) * 1000);
           } else {
+            const error = new Error('Máximo de reintentos alcanzado');
+            console.error('Error final:', error);
             setUploadProgress(prev => ({
               ...prev,
               [fileName]: { 
@@ -136,7 +172,7 @@ export function usePhotographerUpload() {
                 error: 'Error de conexión después de varios intentos' 
               }
             }));
-            reject(new Error('Máximo de reintentos alcanzado'));
+            reject(error);
           }
         };
 
