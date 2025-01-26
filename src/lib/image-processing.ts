@@ -115,8 +115,10 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
     const originalPath = `originals/${eventId}/${fileName}`;
     const compressedPath = `compressed/${eventId}/${fileName}`;
 
+    console.log('Rutas de almacenamiento:', { originalPath, compressedPath });
+
     // Subir imagen original con marca de agua
-    const { error: originalError } = await supabase.storage
+    const { data: originalData, error: originalError } = await supabase.storage
       .from('originals')
       .upload(originalPath, finalImageWithWM, {
         contentType: 'image/jpeg',
@@ -124,10 +126,17 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         upsert: true
       });
 
+    console.log('Respuesta de subida original:', {
+      data: originalData,
+      error: originalError,
+      contentType: 'image/jpeg',
+      size: finalImageWithWM.length
+    });
+
     if (originalError) throw originalError;
 
-    // Subir versión comprimida (la que usamos para OpenAI)
-    const { error: compressedError } = await supabase.storage
+    // Subir versión comprimida
+    const { data: compressedData, error: compressedError } = await supabase.storage
       .from('compressed')
       .upload(compressedPath, compressedBuffer, {
         contentType: 'image/jpeg',
@@ -135,7 +144,23 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         upsert: true
       });
 
+    console.log('Respuesta de subida comprimida:', {
+      data: compressedData,
+      error: compressedError,
+      contentType: 'image/jpeg',
+      size: compressedBuffer.length
+    });
+
     if (compressedError) throw compressedError;
+
+    // Obtener URLs públicas para verificación
+    const originalUrl = supabase.storage.from('originals').getPublicUrl(originalPath);
+    const compressedUrl = supabase.storage.from('compressed').getPublicUrl(compressedPath);
+
+    console.log('URLs generadas:', {
+      original: originalUrl,
+      compressed: compressedUrl
+    });
 
     // 6. Registrar en BD
     const { data: newImage, error: insertError } = await supabase
