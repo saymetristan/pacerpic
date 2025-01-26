@@ -28,7 +28,7 @@ const possibleTags = [
 export function PhotographerUpload() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedTag, setSelectedTag] = useState("");
-  const { uploadImages, uploadProgress } = usePhotographerUpload();
+  const { uploadImages, uploadProgress, clearProgress } = usePhotographerUpload();
   const { toast } = useToast();
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -36,9 +36,23 @@ export function PhotographerUpload() {
       'image/*': ['.jpg', '.jpeg', '.png']
     },
     onDrop: (acceptedFiles) => {
-      setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+      const validFiles = acceptedFiles.filter(file => 
+        file.size <= 25 * 1024 * 1024 && 
+        ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)
+      );
+
+      if (validFiles.length !== acceptedFiles.length) {
+        toast({
+          title: "Archivos ignorados",
+          description: "Algunos archivos fueron ignorados por ser demasiado grandes o de tipo inválido",
+          variant: "destructive"
+        });
+      }
+
+      setSelectedFiles(prev => [...prev, ...validFiles]);
     },
-    disabled: Object.keys(uploadProgress).length > 0
+    disabled: Object.keys(uploadProgress).length > 0,
+    maxSize: 25 * 1024 * 1024
   });
 
   const handleUpload = async () => {
@@ -51,13 +65,28 @@ export function PhotographerUpload() {
       return;
     }
 
-    const success = await uploadImages(selectedFiles, selectedTag);
-    
-    if (success) {
-      setSelectedFiles([]);
+    try {
+      const success = await uploadImages(selectedFiles, selectedTag);
+      
+      if (success) {
+        setSelectedFiles([]);
+        clearProgress();
+        toast({
+          title: "Éxito",
+          description: "Imágenes subidas correctamente"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Algunas imágenes no pudieron ser subidas",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Éxito",
-        description: "Imágenes subidas correctamente"
+        title: "Error",
+        description: error.message || "Error al subir las imágenes",
+        variant: "destructive"
       });
     }
   };

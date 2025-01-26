@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { compressImage, compressImageWithProgress } from '../lib/image-compression';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,43 +11,101 @@ const supabase = createClient(
 interface UploadProgress {
   fileName: string;
   progress: number;
-  status: 'uploading' | 'completed' | 'error';
+  status: 'uploading' | 'completed' | 'error' | 'compressing';
+  error?: string;
+  retries?: number;
 }
+
+const VALID_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/jpg',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+  'image/tiff'
+];
+
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_RETRIES = 3;
 
 export function usePhotographerUpload() {
   const { user } = useUser();
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
 
-  const uploadImages = async (files: File[], tag: string) => {
-    const updates: Promise<void>[] = [];
+  const validateFile = (file: File) => {
+    if (!VALID_TYPES.includes(file.type)) {
+      throw new Error('Tipo de archivo no válido');
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Archivo demasiado grande (máx 25MB)');
+    }
+  };
 
-    for (const file of files) {
-      const fileName = `${Date.now()}-${file.name}`;
-      const filePath = `${tag}/${fileName}`;
+  const uploadSingle = async (file: File, tag: string, retryCount = 0): Promise<void> => {
+    const fileName = `${Date.now()}-${file.name}`;
+    const filePath = `${tag}/${fileName}`;
 
+    try {
+      validateFile(file);
+      
+      // Comprimir antes de subir
       setUploadProgress(prev => ({
         ...prev,
-        [fileName]: { fileName, progress: 0, status: 'uploading' }
+        [fileName]: { 
+          fileName, 
+          progress: 0,
+          status: 'compressing',
+          retries: retryCount 
+        }
       }));
 
-      const update = new Promise<void>((resolve, reject) => {
+      const compressedFile = await compressImageWithProgress(
+        file,
+        (progress) => {
+          setUploadProgress(prev => ({
+            ...prev,
+            [fileName]: { 
+              ...prev[fileName],
+              progress: Math.round(progress * 0.5) // La compresión es 50% del progreso total
+            }
+          }));
+        }
+      );
+
+      // Continuar con la subida del archivo comprimido
+      return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/photos/${filePath}`);
         
         xhr.setRequestHeader('Authorization', `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`);
         xhr.setRequestHeader('x-upsert', 'true');
 
+        let timeout = setTimeout(() => {
+          xhr.abort();
+          reject(new Error('Tiempo de espera agotado'));
+        }, 30000);
+
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
-            const progress = Math.round((event.loaded * 100) / event.total);
+            const uploadProgress = Math.round((event.loaded * 100) / event.total);
+            // El progreso de subida es el otro 50%
+            const totalProgress = 50 + Math.round(uploadProgress * 0.5);
             setUploadProgress(prev => ({
               ...prev,
-              [fileName]: { ...prev[fileName], progress }
+              [fileName]: { 
+                fileName, 
+                progress: totalProgress,
+                status: 'uploading',
+                retries: retryCount 
+              }
             }));
           }
         };
 
-        xhr.onload = async () => {
+        xhr.onload = () => {
+          clearTimeout(timeout);
           if (xhr.status === 200) {
             setUploadProgress(prev => ({
               ...prev,
@@ -54,39 +113,63 @@ export function usePhotographerUpload() {
             }));
             resolve();
           } else {
-            setUploadProgress(prev => ({
-              ...prev,
-              [fileName]: { fileName, progress: 0, status: 'error' }
-            }));
-            reject(new Error(`Upload failed: ${xhr.statusText}`));
+            throw new Error(`Error ${xhr.status}: ${xhr.statusText}`);
           }
         };
 
         xhr.onerror = () => {
-          setUploadProgress(prev => ({
-            ...prev,
-            [fileName]: { fileName, progress: 0, status: 'error' }
-          }));
-          reject(new Error('Upload failed'));
+          clearTimeout(timeout);
+          if (retryCount < MAX_RETRIES) {
+            setTimeout(() => {
+              uploadSingle(file, tag, retryCount + 1)
+                .then(resolve)
+                .catch(reject);
+            }, Math.pow(2, retryCount) * 1000);
+          } else {
+            setUploadProgress(prev => ({
+              ...prev,
+              [fileName]: { 
+                fileName, 
+                progress: 0, 
+                status: 'error',
+                error: 'Error de conexión después de varios intentos' 
+              }
+            }));
+            reject(new Error('Máximo de reintentos alcanzado'));
+          }
         };
 
-        xhr.send(file);
+        xhr.send(compressedFile);
       });
-
-      updates.push(update);
+    } catch (error: any) {
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileName]: { 
+          fileName, 
+          progress: 0, 
+          status: 'error',
+          error: error.message 
+        }
+      }));
+      throw error;
     }
+  };
 
+  const uploadImages = async (files: File[], tag: string) => {
+    const updates = files.map(file => uploadSingle(file, tag));
+    
     try {
       await Promise.all(updates);
       return true;
     } catch (error) {
-      console.error('Error uploading files:', error);
+      console.error('Error en la subida:', error);
       return false;
     }
   };
 
   return {
     uploadImages,
-    uploadProgress
+    uploadProgress,
+    clearProgress: () => setUploadProgress({})
   };
 }
