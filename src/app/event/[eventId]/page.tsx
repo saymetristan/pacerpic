@@ -76,7 +76,7 @@ export default function EventGalleryPage() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [selectedImage, setSelectedImage] = useState<EventImage | null>(null);
-  const ITEMS_PER_PAGE = 50;
+  const ITEMS_PER_PAGE = 100;
   const { toast } = useToast();
   const [selectedTag, setSelectedTag] = useState<string>("");
   const { ref, inView } = useInView();
@@ -121,10 +121,14 @@ export default function EventGalleryPage() {
   const paginatedImages = filteredImages.slice(0, page * ITEMS_PER_PAGE);
 
   useEffect(() => {
-    if (inView && hasMore) {
-      setPage(p => p + 1);
-    }
-  }, [inView, hasMore]);
+    const timer = setTimeout(() => {
+      if (hasMore) {
+        setPage(p => p + 1);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [inView, hasMore, page]);
 
   useEffect(() => {
     setPage(1);
