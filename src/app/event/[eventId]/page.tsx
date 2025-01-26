@@ -100,7 +100,9 @@ export default function EventGalleryPage() {
         setEvent(eventData);
         
         const imagesResponse = await fetch(`/api/events/${params.eventId}/images`);
+        console.log('Status de respuesta:', imagesResponse.status);
         const imagesData = await imagesResponse.json();
+        console.log('Total de imágenes recibidas:', imagesData.length);
         setImages(imagesData);
       } catch (error) {
         console.error('Error en fetch:', error);
@@ -121,14 +123,15 @@ export default function EventGalleryPage() {
   const paginatedImages = filteredImages.slice(0, page * ITEMS_PER_PAGE);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (hasMore) {
-        setPage(p => p + 1);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [inView, hasMore, page]);
+    console.log('Imágenes filtradas:', filteredImages.length);
+    console.log('Imágenes paginadas:', paginatedImages.length);
+    console.log('Página actual:', page);
+    console.log('Tiene más:', hasMore);
+    
+    if (hasMore) {
+      setPage(p => p + 1);
+    }
+  }, [filteredImages.length, hasMore]);
 
   useEffect(() => {
     setPage(1);

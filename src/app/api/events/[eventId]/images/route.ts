@@ -28,6 +28,13 @@ export async function GET(
       return new Response('Evento no encontrado', { status: 404 });
     }
 
+    const { count } = await supabase
+      .from('images')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', eventId);
+
+    console.log('Total de imágenes en la base de datos:', count);
+
     const { data, error } = await supabase
       .from('images')
       .select(`
@@ -39,8 +46,7 @@ export async function GET(
         image_dorsals(dorsal_number, confidence)
       `)
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false })
-      .range(0, 999);
+      .order('created_at', { ascending: false });
 
     if (error) {
       return new Response('Error al obtener imágenes', { status: 500 });
