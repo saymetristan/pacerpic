@@ -4,17 +4,24 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { PhotographerSidebar } from "@/components/layout/photographer-sidebar";
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
   const isAdmin = pathname?.includes("/admin");
+  const isPhotographer = pathname?.includes("/photographer");
 
   return (
     <div className="h-screen flex dark:bg-gray-950">
       {isAdmin ? (
         <AdminSidebar 
+          collapsed={collapsed} 
+          onToggle={() => setCollapsed(!collapsed)} 
+        />
+      ) : isPhotographer ? (
+        <PhotographerSidebar 
           collapsed={collapsed} 
           onToggle={() => setCollapsed(!collapsed)} 
         />
