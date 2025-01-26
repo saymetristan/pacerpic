@@ -98,7 +98,8 @@ export default function EventGalleryPage() {
         console.log('Status de respuesta images:', imagesResponse.status);
         
         const imagesData = await imagesResponse.json();
-        console.log('Datos recibidos:', imagesData);
+        console.log('Imágenes recibidas:', imagesData);
+        console.log('Tags de la primera imagen:', imagesData[0]?.tags);
 
         setImages(imagesData);
       } catch (error) {
@@ -225,8 +226,14 @@ export default function EventGalleryPage() {
             >
               {paginatedImages
                 .filter(image => {
+                  console.log('Filtrando imagen:', {
+                    imageId: image.id,
+                    imageTags: image.tags,
+                    selectedTag,
+                    match: !selectedTag || image.tags?.includes(selectedTag)
+                  });
                   if (!selectedTag) return true;
-                  return image.tags?.some(tag => tag === selectedTag);
+                  return image.tags?.includes(selectedTag);
                 })
                 .map((image) => (
                   <div 
