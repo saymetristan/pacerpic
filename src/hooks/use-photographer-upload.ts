@@ -45,29 +45,11 @@ export function usePhotographerUpload() {
   };
 
   const uploadSingle = async (file: File, tag: string, retryCount = 0): Promise<void> => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Configuración incompleta');
-    }
-
     const fileName = `${Date.now()}-${file.name}`;
-    const filePath = `${tag.replace(/\s+/g, '_')}/${fileName}`;
     
-    console.log('Iniciando subida:', { fileName, filePath, fileSize: file.size, fileType: file.type });
-
     try {
       validateFile(file);
-      console.log('Archivo validado correctamente');
       
-      setUploadProgress(prev => ({
-        ...prev,
-        [fileName]: { 
-          fileName, 
-          progress: 0,
-          status: 'compressing',
-          retries: retryCount 
-        }
-      }));
-
       const compressedFile = await compressImageWithProgress(
         file,
         (progress) => {
@@ -87,93 +69,26 @@ export function usePhotographerUpload() {
         compressedSize: compressedFile.size 
       });
 
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/juntos/${filePath}`;
-        console.log('URL de subida:', url);
-
-        xhr.open('POST', url);
-        xhr.setRequestHeader('Authorization', `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`);
-        xhr.setRequestHeader('x-upsert', 'true');
-        xhr.setRequestHeader('Content-Type', 'image/jpeg');
-
-        xhr.onreadystatechange = () => {
-          console.log('Estado XHR:', { 
-            readyState: xhr.readyState,
-            status: xhr.status,
-            response: xhr.responseText
-          });
-        };
-
-        const timeout = setTimeout(() => {
-          xhr.abort();
-          reject(new Error('Tiempo de espera agotado'));
-        }, 30000);
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const uploadProgress = Math.round((event.loaded * 100) / event.total);
-            // El progreso de subida es el otro 50%
-            const totalProgress = 50 + Math.round(uploadProgress * 0.5);
-            setUploadProgress(prev => ({
-              ...prev,
-              [fileName]: { 
-                fileName, 
-                progress: totalProgress,
-                status: 'uploading',
-                retries: retryCount 
-              }
-            }));
-          }
-        };
-
-        xhr.onload = () => {
-          clearTimeout(timeout);
-          if (xhr.status === 200) {
-            setUploadProgress(prev => ({
-              ...prev,
-              [fileName]: { fileName, progress: 100, status: 'completed' }
-            }));
-            resolve();
-          } else {
-            throw new Error(`Error ${xhr.status}: ${xhr.statusText}`);
-          }
-        };
-
-        xhr.onerror = (event) => {
-          console.error('Error XHR:', {
-            event,
-            status: xhr.status,
-            response: xhr.responseText,
-            headers: xhr.getAllResponseHeaders()
-          });
-          
-          clearTimeout(timeout);
-          if (retryCount < MAX_RETRIES) {
-            console.log(`Reintentando subida (${retryCount + 1}/${MAX_RETRIES})`);
-            setTimeout(() => {
-              uploadSingle(file, tag, retryCount + 1)
-                .then(resolve)
-                .catch(reject);
-            }, Math.pow(2, retryCount) * 1000);
-          } else {
-            const error = new Error('Máximo de reintentos alcanzado');
-            console.error('Error final:', error);
-            setUploadProgress(prev => ({
-              ...prev,
-              [fileName]: { 
-                fileName, 
-                progress: 0, 
-                status: 'error',
-                error: 'Error de conexión después de varios intentos' 
-              }
-            }));
-            reject(error);
-          }
-        };
-
-        xhr.send(compressedFile);
+      const formData = new FormData();
+      formData.append('file', compressedFile);
+      formData.append('tag', tag);
+      
+      const response = await fetch('/api/upload/photographer', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        }
       });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
+      }
+
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileName]: { fileName, progress: 100, status: 'completed' }
+      }));
     } catch (error: unknown) {
       const uploadError = error as UploadError;
       setUploadProgress(prev => ({
