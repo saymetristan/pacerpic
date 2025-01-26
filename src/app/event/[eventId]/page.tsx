@@ -167,14 +167,26 @@ export default function EventGalleryPage() {
             <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
               Galería {event?.name ? `| ${event.name}` : ''}
             </h1>
+
+            {/* Dropdown para móvil */}
+            <select
+              className="md:hidden border rounded-md p-2 bg-background"
+              value={selectedTag}
+              onChange={(e) => setSelectedTag(e.target.value)}
+            >
+              <option value="">Todas las zonas</option>
+              {possibleTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
           </div>
 
-          <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-2">
+          {/* Botones para desktop */}
+          <div className="hidden md:block">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant={selectedTag === "" ? "default" : "outline"}
                 onClick={() => setSelectedTag("")}
-                className="shrink-0"
                 size="sm"
               >
                 Todas las zonas
@@ -185,14 +197,13 @@ export default function EventGalleryPage() {
                   key={tag}
                   variant={selectedTag === tag ? "default" : "outline"}
                   onClick={() => setSelectedTag(tag)}
-                  className="shrink-0 whitespace-nowrap"
                   size="sm"
                 >
                   {tag}
                 </Button>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {loading ? (
@@ -215,9 +226,7 @@ export default function EventGalleryPage() {
               {paginatedImages
                 .filter(image => {
                   if (!selectedTag) return true;
-                  return image.tags?.some(tag => 
-                    tag.toLowerCase().includes(selectedTag.toLowerCase())
-                  );
+                  return image.tags?.some(tag => tag === selectedTag);
                 })
                 .map((image) => (
                   <div 
