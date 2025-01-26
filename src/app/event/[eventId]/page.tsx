@@ -75,7 +75,7 @@ export default function EventGalleryPage() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [selectedImage, setSelectedImage] = useState<EventImage | null>(null);
-  const ITEMS_PER_PAGE = 24;
+  const ITEMS_PER_PAGE = 50;
   const { toast } = useToast();
   const [selectedTag, setSelectedTag] = useState<string>("");
 
@@ -99,6 +99,7 @@ export default function EventGalleryPage() {
         
         const imagesResponse = await fetch(`/api/events/${params.eventId}/images`);
         const imagesData = await imagesResponse.json();
+        console.log('Total de imágenes recibidas:', imagesData.length);
         setImages(imagesData);
       } catch (error) {
         console.error('Error en fetch:', error);
