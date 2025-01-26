@@ -92,15 +92,12 @@ export default function EventGalleryPage() {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        console.log('Iniciando fetch con eventId:', params.eventId);
+        const eventResponse = await fetch(`/api/events/${params.eventId}`);
+        const eventData = await eventResponse.json();
+        setEvent(eventData);
         
         const imagesResponse = await fetch(`/api/events/${params.eventId}/images`);
-        console.log('Status de respuesta images:', imagesResponse.status);
-        
         const imagesData = await imagesResponse.json();
-        console.log('Imágenes recibidas:', imagesData);
-        console.log('Tag de la primera imagen:', imagesData.tag);
-
         setImages(imagesData);
       } catch (error) {
         console.error('Error en fetch:', error);
@@ -166,7 +163,7 @@ export default function EventGalleryPage() {
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-[#1A3068] dark:text-white">
-              Galería {event?.name ? `| ${event.name}` : ''}
+              {event?.name || 'Cargando...'}
             </h1>
 
             {/* Dropdown para móvil */}
