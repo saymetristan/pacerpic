@@ -23,11 +23,14 @@ const tagsByUser: Record<string, string[]> = {
 export default function ProcessPage() {
   const { user } = useUser();
   const [processing, setProcessing] = useState<string | null>(null);
+  const [processingTags, setProcessingTags] = useState<Set<string>>(new Set());
 
   const userTags = user?.email ? tagsByUser[user.email] || [] : [];
 
   const processTag = async (tag: string) => {
     setProcessing(tag);
+    setProcessingTags(prev => new Set(Array.from(prev).concat(tag)));
+    
     try {
       const response = await fetch('/api/process-tag', {
         method: 'POST',
@@ -47,6 +50,11 @@ export default function ProcessPage() {
       toast.error(`Error procesando tag ${tag}`);
     } finally {
       setProcessing(null);
+      setProcessingTags(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(tag);
+        return newSet;
+      });
     }
   };
 
@@ -70,10 +78,10 @@ export default function ProcessPage() {
             key={tag}
             variant="outline"
             className="h-24 text-lg"
-            disabled={processing !== null}
+            disabled={processingTags.size > 0}
             onClick={() => processTag(tag)}
           >
-            {processing === tag ? (
+            {processingTags.has(tag) ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary" />
                 Procesando...
