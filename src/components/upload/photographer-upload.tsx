@@ -13,6 +13,7 @@ const possibleTags = [
   "Entrega de Kis Sabado",
   "Salida Meta",
   "Convivencia Centro de Convenciones", 
+  "Centro de Convenciones",
   "Entrada Lago",
   "Salida Lago",
   "Patrocinadores",
