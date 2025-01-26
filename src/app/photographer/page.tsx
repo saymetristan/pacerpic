@@ -1,7 +1,5 @@
 "use client";
 
-import { PhotographerUpload } from "@/components/upload/photographer-upload";
-
 export default function PhotographerPage() {
   return (
     <div className="container mx-auto p-8">
@@ -13,7 +11,6 @@ export default function PhotographerPage() {
       </div>
       
       <div className="max-w-4xl mx-auto">
-        <PhotographerUpload />
       </div>
     </div>
   );
