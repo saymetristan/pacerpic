@@ -130,6 +130,7 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
         event_id: eventId,
         photographer_id: photographerId,
         original_url: originalPath,
+        compressed_url: originalPath,
         status: 'processed',
         tags: tag ? [tag] : []
       })
