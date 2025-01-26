@@ -8,7 +8,7 @@ export type UserRole = 'admin' | 'photographer' | 'organizer';
 
 interface Auth0Metadata {
   role?: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 export function useAuthSync() {
