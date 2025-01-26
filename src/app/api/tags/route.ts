@@ -21,16 +21,22 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Debug: Obtener el usuario
     const { data: dbUser, error: userError } = await supabase
       .from('users')
       .select('id')
       .eq('auth0_id', session.user.sub)
       .single()
 
+    console.log('Auth0 sub:', session.user.sub)
+    console.log('DB User:', dbUser)
+    console.log('User Error:', userError)
+
     if (!dbUser || userError) {
       return NextResponse.json({ error: 'Usuario inválido' }, { status: 400 })
     }
 
+    // Debug: Obtener tags
     const { data: tags, error: tagsError } = await supabase
       .from('user_tags')
       .select(`
@@ -39,8 +45,11 @@ export async function GET() {
           name
         )
       `)
-      .eq('user_id', dbUser.id)
-      .returns<Tag[]>()
+      .eq('user_id', dbUser.id) as { data: Tag[] | null, error: any }
+
+    console.log('User ID:', dbUser.id)
+    console.log('Tags:', tags)
+    console.log('Tags Error:', tagsError)
 
     if (tagsError) {
       return NextResponse.json({ error: tagsError.message }, { status: 500 })
@@ -53,6 +62,7 @@ export async function GET() {
 
     return NextResponse.json({ tags: formattedTags })
   } catch (error) {
+    console.error('Error completo:', error)
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
