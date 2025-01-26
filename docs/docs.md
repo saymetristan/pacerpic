@@ -159,3 +159,4 @@
 1. Conectar frontend y backend.
 2. Probar el flujo completo para corredores y fotógrafos.
 3. Ajustar detalles de UX y mensajes de estado.
+hola
