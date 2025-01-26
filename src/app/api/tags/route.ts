@@ -51,8 +51,8 @@ export async function GET() {
     // 2. Debug consulta de tags
     const { data: userTags, error: tagsError } = await supabase
       .from('user_tags')
-      .select('*')  // Primero veamos todos los campos
-      .eq('user_id', dbUser.id)
+      .select('*')
+      .eq('user_id', dbUser.auth0_id)
 
     console.log("User Tags raw:", userTags)
     console.log("Tags Error:", tagsError)
