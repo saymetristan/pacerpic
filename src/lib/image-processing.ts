@@ -256,6 +256,14 @@ Asegúrate de reconocer los números de dorsal que sean completos y legibles. Si
 }
 
 async function uploadWithRetry(bucket: string, path: string, file: Buffer, attempts = 3) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: { autoRefreshToken: false, persistSession: false }
+    }
+  );
+
   for (let i = 0; i < attempts; i++) {
     try {
       const { error } = await supabase.storage
