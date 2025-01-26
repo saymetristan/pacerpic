@@ -24,8 +24,21 @@ export function GalleryFilters({ onFilterChange }: GalleryFiltersProps) {
   const [events, setEvents] = useState<{id: string, name: string}[]>([]);
 
   const tags = [
-    "Llegada", "Salida", "Avituallamiento", 
-    "Paisaje", "Grupo", "Individual", "Podio"
+    "Entrega de Kits Viernes",
+    "Entrega de Kis Sabado",
+    "Salida Meta",
+    "Convivencia Centro de Convenciones",
+    "Entrada Lago",
+    "Salida Lago",
+    "Patrocinadores",
+    "Rampa Centro de Convenciones",
+    "Photo Opportunity 10k",
+    "Entrada Laberinto",
+    "Laberinto Juan Escumbia",
+    "Laberinto Nido",
+    "Generales",
+    "Photo Opportunity 3k, 5k y 10k",
+    "Rifa Ganadores"
   ];
 
   useEffect(() => {

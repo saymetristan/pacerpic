@@ -31,7 +31,7 @@ export function GalleryGrid({ filters }: GalleryGridProps) {
   const filteredImages = images.filter(image => {
     if (filters.status !== 'all' && image.status !== filters.status) return false;
     if (filters.events.length && !filters.events.includes(image.event_id || '')) return false;
-    if (filters.tags.length && !image.tags?.some(tag => filters.tags.includes(tag))) return false;
+    if (filters.tags.length && !filters.tags.includes(image.tag || '')) return false;
     return true;
   });
 

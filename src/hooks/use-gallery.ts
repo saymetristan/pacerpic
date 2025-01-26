@@ -12,7 +12,7 @@ export interface GalleryImage {
   compressed_url: string;
   status: string | null;
   created_at: string;
-  tags: string[] | null;
+  tag: string | null;
   event: {
     name: string;
     date: string;
@@ -33,6 +33,7 @@ interface SupabaseImage {
   compressed_url: string;
   status: string | null;
   created_at: string;
+  tag: string | null;
   event: {
     name: string;
     date: string;
@@ -76,7 +77,7 @@ export function useGallery(userId?: string) {
 
       const mappedImages: GalleryImage[] = ((data || []) as unknown as SupabaseImage[]).map(img => ({
         ...img,
-        tags: [],
+        tag: img.tag || null,
         image_dorsals: Array.isArray(img.image_dorsals) ? img.image_dorsals : [],
         event: img.event ? { ...img.event, location: img.event.location || null } : null
       }));

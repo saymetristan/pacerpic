@@ -53,7 +53,7 @@ export async function GET(
         event_id,
         original_url,
         created_at,
-        tags,
+        tag,
         image_dorsals(dorsal_number, confidence)
       `)
       .eq('event_id', eventId)
