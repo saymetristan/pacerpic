@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function UploadPage() {
   const { user } = useUser();
@@ -33,7 +40,7 @@ export default function UploadPage() {
     const loadTags = async () => {
       try {
         const res = await axios.get("/api/tags");
-        setTags(res.data.tags?.tags || []);
+        setTags(res.data.tags || []);
       } catch (err) {
         console.error("Error cargando tags:", err);
       }
@@ -100,21 +107,21 @@ export default function UploadPage() {
             {/* Selector de Tags (Multi-Select simple) */}
             <div className="space-y-2">
               <label className="font-semibold">Tags disponibles</label>
-              <select
-                multiple
-                value={selectedTagIds}
-                onChange={e => {
-                  const values = Array.from(e.target.selectedOptions, opt => opt.value);
-                  setSelectedTagIds(values);
-                }}
-                className="border rounded p-2 w-full"
+              <Select
+                onValueChange={(value) => setSelectedTagIds([value])}
+                value={selectedTagIds[0]}
               >
-                {tags.map((tag: { id: string; name: string }) => (
-                  <option key={tag.id} value={tag.id}>
-                    {tag.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona tags para las imágenes" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tags.map((tag: { id: string; name: string }) => (
+                    <SelectItem key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <UploadZone
