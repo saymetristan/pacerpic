@@ -57,8 +57,18 @@ export default function UploadPage() {
     try {
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            persistSession: false
+          }
+        }
       );
+
+      await supabase.auth.setSession({
+        access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        refresh_token: ''
+      });
 
       const BATCH_SIZE = 20;
       let processedCount = 0;

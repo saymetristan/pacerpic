@@ -16,8 +16,19 @@ export async function POST(req: Request) {
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false
+        }
+      }
     );
+
+    // Establecer sesión con service_role
+    await supabase.auth.setSession({
+      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      refresh_token: ''
+    });
 
     // Procesar archivos ya subidos en temp/
     const batchSize = 10;
