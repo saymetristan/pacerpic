@@ -7,7 +7,7 @@
   - Implementación de `useAuthSync` hook para sincronización bidireccional
   - Manejo de sesiones con `createClientComponentClient`
   - Persistencia automática de usuarios Auth0 en tabla `users` de Supabase
-  - Sincronización de roles y metadatos entre sistemas
+  - Sincronización de roles y metadatos entre sistemas.
 
 - ✅ Mejora del procesamiento de imágenes:
   - Migración a `createClient` con `SUPABASE_SERVICE_ROLE_KEY` para operaciones del servidor
