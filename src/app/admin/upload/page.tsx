@@ -55,28 +55,32 @@ export default function UploadPage() {
 
     try {
       const formData = new FormData();
-      
-      // Agregar cada archivo al FormData
       selectedFiles.forEach(file => {
         formData.append('files', file);
       });
       
-      // Agregar los demás campos
       formData.append('eventId', selectedEventId);
-      formData.append('photographerId', user?.sub || ''); // Asegúrate de tener acceso al user
+      formData.append('photographerId', user?.sub || '');
       formData.append('tag', selectedTag);
+
+      console.log('Enviando request con:', {
+        filesCount: selectedFiles.length,
+        eventId: selectedEventId,
+        tag: selectedTag
+      });
 
       const response = await fetch('/api/fast-upload', {
         method: 'POST',
         body: formData
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Error al subir las imágenes');
+        console.error('Error detallado:', result);
+        throw new Error(result.error || 'Error desconocido');
       }
 
-      const result = await response.json();
-      
       toast({
         title: "Éxito",
         description: `${result.count} imágenes en proceso de subida`,
@@ -84,10 +88,10 @@ export default function UploadPage() {
 
       setSelectedFiles([]);
     } catch (err) {
-      console.error("Error al subir las imágenes:", err);
+      console.error("Error completo:", err);
       toast({
         title: "Error",
-        description: "Hubo un error al procesar las imágenes",
+        description: err instanceof Error ? err.message : "Error desconocido al procesar imágenes",
         variant: "destructive"
       });
     }
