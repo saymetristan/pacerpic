@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/fast-upload/*.ts": {
+      "src/app/api/fast-upload/route.ts": {
         "runtime": "@vercel/node@3.0.0",
         "memory": 3008
       }
