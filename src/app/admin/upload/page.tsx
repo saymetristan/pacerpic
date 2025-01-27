@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { createClient } from '@supabase/supabase-js';
 
 // Agrega este arreglo con los posibles tags
 const possibleTags = [
@@ -54,44 +55,65 @@ export default function UploadPage() {
     }
 
     try {
-      const formData = new FormData();
-      selectedFiles.forEach(file => {
-        formData.append('files', file);
-      });
-      
-      formData.append('eventId', selectedEventId);
-      formData.append('photographerId', user?.sub || '');
-      formData.append('tag', selectedTag);
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
-      console.log('Enviando request con:', {
-        filesCount: selectedFiles.length,
-        eventId: selectedEventId,
-        tag: selectedTag
-      });
+      const BATCH_SIZE = 20;
+      let processedCount = 0;
+      const uploadedFiles = [];
 
-      const response = await fetch('/api/fast-upload', {
-        method: 'POST',
-        body: formData
-      });
+      for (let i = 0; i < selectedFiles.length; i += BATCH_SIZE) {
+        const batch = selectedFiles.slice(i, i + BATCH_SIZE);
+        
+        // Subir directamente a temp/
+        const uploads = await Promise.all(
+          batch.map(async (file) => {
+            const tempPath = `temp/${selectedEventId}/${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage
+              .from('originals')
+              .upload(tempPath, file, {
+                cacheControl: '3600',
+                upsert: true
+              });
 
-      const result = await response.json();
+            if (error) throw error;
+            return { path: tempPath, name: file.name };
+          })
+        );
 
-      if (!response.ok) {
-        console.error('Error detallado:', result);
-        throw new Error(result.error || 'Error desconocido');
+        uploadedFiles.push(...uploads);
+        processedCount += uploads.length;
+
+        // Notificar al backend para procesar
+        const response = await fetch('/api/fast-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            files: uploads,
+            eventId: selectedEventId,
+            photographerId: user?.sub,
+            tag: selectedTag
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
       }
 
       toast({
         title: "Éxito",
-        description: `${result.count} imágenes en proceso de subida`,
+        description: `${processedCount} imágenes subidas y en proceso`,
       });
 
       setSelectedFiles([]);
     } catch (err) {
-      console.error("Error completo:", err);
+      console.error("Error:", err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Error desconocido al procesar imágenes",
+        description: err instanceof Error ? err.message : "Error desconocido",
         variant: "destructive"
       });
     }

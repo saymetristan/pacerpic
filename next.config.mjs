@@ -12,12 +12,22 @@ const nextConfig = {
       },
     ],
   },
-  serverRuntimeConfig: {
-    api: {
-      bodyParser: {
-        sizeLimit: '25mb'
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
       },
-      responseLimit: '25mb'
+    ]
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb'
     }
   }
 };
