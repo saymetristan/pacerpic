@@ -1,6 +1,13 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import sharp from 'sharp';
+import { NextResponse } from 'next/server';
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL no está definida');
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY no está definida');
+}
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sfo1'; // Región más cercana a México
@@ -12,8 +19,12 @@ interface UploadedFile {
 
 export async function POST(req: Request) {
   try {
-    const { files, eventId, photographerId, tag } = await req.json();
-    
+    const formData = await req.formData();
+    const files = formData.getAll('files') as File[];
+    const eventId = formData.get('eventId') as string;
+    const photographerId = formData.get('photographerId') as string;
+    const tag = formData.get('tag') as string;
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -24,59 +35,46 @@ export async function POST(req: Request) {
       }
     );
 
-    // Establecer sesión con service_role
-    await supabase.auth.setSession({
-      access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      refresh_token: ''
-    });
+    const allUploads = [];
 
-    // Procesar archivos ya subidos en temp/
-    const batchSize = 10;
-    const allProcessed = [];
+    for (const file of files) {
+      try {
+        const tempPath = `temp/${eventId}/${Date.now()}-${file.name}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
 
-    for (let i = 0; i < files.length; i += batchSize) {
-      const batch = files.slice(i, i + batchSize);
-      const processedBatch = await Promise.all(
-        batch.map(async (file: UploadedFile) => {
-          try {
-            // Registrar en base de datos
-            const { data: image, error: dbError } = await supabase
-              .from('images')
-              .insert({
-                event_id: eventId,
-                photographer_id: photographerId,
-                original_url: file.path,
-                status: 'uploaded',
-                tag
-              })
-              .select()
-              .single();
+        const { error: uploadError } = await supabase.storage
+          .from('originals')
+          .upload(tempPath, buffer, {
+            cacheControl: '3600',
+            upsert: true
+          });
 
-            if (dbError) throw dbError;
+        if (uploadError) throw uploadError;
 
-            // Encolar para procesamiento
-            await supabase.functions.invoke('process-ai', {
-              body: { 
-                imageId: image.id,
-                path: file.path
-              }
-            });
+        const { data: image, error: dbError } = await supabase
+          .from('images')
+          .insert({
+            event_id: eventId,
+            photographer_id: photographerId,
+            original_url: tempPath,
+            status: 'uploaded',
+            tag
+          })
+          .select()
+          .single();
 
-            return image;
-          } catch (error) {
-            console.error(`Error procesando ${file.path}:`, error);
-            return null;
-          }
-        })
-      );
+        if (dbError) throw dbError;
+        allUploads.push(image);
 
-      allProcessed.push(...processedBatch.filter(Boolean));
+      } catch (error) {
+        console.error(`Error procesando ${file.name}:`, error);
+      }
     }
 
     return NextResponse.json({ 
       status: 'processing',
-      count: allProcessed.length,
-      images: allProcessed
+      count: allUploads.length,
+      images: allUploads
     });
 
   } catch (error) {

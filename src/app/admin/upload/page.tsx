@@ -55,67 +55,38 @@ export default function UploadPage() {
     }
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            persistSession: false
-          }
-        }
-      );
-
-      await supabase.auth.setSession({
-        access_token: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        refresh_token: ''
-      });
-
+      // Enviar directamente al backend
       const BATCH_SIZE = 20;
       let processedCount = 0;
-      const uploadedFiles = [];
 
       for (let i = 0; i < selectedFiles.length; i += BATCH_SIZE) {
         const batch = selectedFiles.slice(i, i + BATCH_SIZE);
+        const formData = new FormData();
         
-        // Subir directamente a temp/
-        const uploads = await Promise.all(
-          batch.map(async (file) => {
-            const tempPath = `temp/${selectedEventId}/${Date.now()}-${file.name}`;
-            const { data, error } = await supabase.storage
-              .from('originals')
-              .upload(tempPath, file, {
-                cacheControl: '3600',
-                upsert: true
-              });
+        batch.forEach(file => {
+          formData.append('files', file);
+        });
+        
+        formData.append('eventId', selectedEventId);
+        formData.append('photographerId', user?.sub || '');
+        formData.append('tag', selectedTag);
 
-            if (error) throw error;
-            return { path: tempPath, name: file.name };
-          })
-        );
-
-        uploadedFiles.push(...uploads);
-        processedCount += uploads.length;
-
-        // Notificar al backend para procesar
         const response = await fetch('/api/fast-upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            files: uploads,
-            eventId: selectedEventId,
-            photographerId: user?.sub,
-            tag: selectedTag
-          })
+          body: formData
         });
 
         if (!response.ok) {
           throw new Error(await response.text());
         }
+
+        const result = await response.json();
+        processedCount += result.count;
       }
 
       toast({
         title: "Éxito",
-        description: `${processedCount} imágenes subidas y en proceso`,
+        description: `${processedCount} imágenes en proceso`,
       });
 
       setSelectedFiles([]);

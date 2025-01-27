@@ -50,7 +50,7 @@ const WhatsAppIcon = () => (
 
 const possibleTags = [
   "Entrega de Kits Viernes",
-  "Entrega de Kis Sabado",
+  "Entrega de Kits Sabado",
   "Salida Meta",
   "Convivencia Centro de Convenciones",
   "Entrada Lago",
