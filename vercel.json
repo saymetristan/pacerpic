@@ -1,0 +1,9 @@
+{
+    "functions": {
+      "api/fast-upload/*.ts": {
+        "runtime": "edge",
+        "memory": 3008
+      }
+    },
+    "regions": ["sfo1"]
+  }
