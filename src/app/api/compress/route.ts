@@ -1,30 +1,47 @@
-import sharp from 'sharp'
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
-export const runtime = 'edge'
+// Cambiar a runtime nodejs
+export const runtime = 'nodejs';
+export const preferredRegion = 'sfo1';
 
 export async function POST(req: Request) {
-  const { file, fileName, eventId } = await req.json()
-  
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+    const eventId = formData.get('eventId') as string;
+    
+    const buffer = await file.arrayBuffer();
+    const compressedBuffer = await sharp(Buffer.from(buffer))
+      .resize(1300, 1300, { fit: 'inside' })
+      .jpeg({ quality: 80 })
+      .toBuffer();
 
-  const buffer = Buffer.from(file, 'base64')
-  const compressedBuffer = await sharp(buffer)
-    .resize(1300, 1300, { fit: 'inside' })
-    .jpeg({ quality: 80 })
-    .toBuffer()
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-  const compressedPath = `compressed/${eventId}/${fileName}`
-  
-  await supabase.storage
-    .from('compressed')
-    .upload(compressedPath, compressedBuffer, {
-      contentType: 'image/jpeg',
-      upsert: true
-    })
+    const compressedPath = `compressed/${eventId}/${file.name}`;
+    
+    await supabase.storage
+      .from('compressed')
+      .upload(compressedPath, compressedBuffer, {
+        contentType: 'image/jpeg',
+        upsert: true
+      });
 
-  return Response.json({ success: true, path: compressedPath })
+    return NextResponse.json({ 
+      success: true, 
+      path: compressedPath 
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'Error procesando imagen' },
+      { status: 500 }
+    );
+  }
 } 
