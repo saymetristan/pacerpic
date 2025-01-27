@@ -68,8 +68,7 @@ export async function POST(req: Request) {
                 original_url: `originals/${eventId}/${file.name}`,
                 compressed_url: `compressed/${eventId}/${file.name}`,
                 status: 'pending_ai',
-                tag,
-                batch_number: Math.floor(i/batchSize)
+                tag
               })
               .select()
               .single();
@@ -112,8 +111,7 @@ export async function POST(req: Request) {
       total_batches: Math.ceil(files.length/batchSize),
       images: allUploads.map(img => ({
         id: img.id,
-        status: img.status,
-        batch_number: img.batch_number
+        status: img.status
       }))
     });
 
