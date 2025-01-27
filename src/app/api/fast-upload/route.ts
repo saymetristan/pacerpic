@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 export const runtime = 'edge';
 export const preferredRegion = 'sfo1'; // Región más cercana a México
@@ -25,53 +26,72 @@ export async function POST(req: Request) {
   );
 
   try {
-    // Subir a bucket temporal
+    // 1. Subir y comprimir en paralelo
     const uploads = await Promise.all(
       files.map(async (file) => {
         const buffer = await file.arrayBuffer();
-        const path = `temp/${eventId}/${Date.now()}-${file.name}`;
-        
-        console.log(`Subiendo archivo: ${path}`);
-        const { data, error } = await supabase.storage
-          .from('temp')
-          .upload(path, buffer, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
+        const compressedBuffer = await sharp(Buffer.from(buffer))
+          .resize(1300, 1300, { fit: 'inside' })
+          .jpeg({ quality: 80 })
+          .toBuffer();
 
-        if (error) {
-          console.error(`Error subiendo ${path}:`, error);
-          throw error;
-        }
+        // Subir original y comprimida
+        const [originalUpload, compressedUpload] = await Promise.all([
+          supabase.storage
+            .from('originals')
+            .upload(`originals/${eventId}/${file.name}`, buffer, {
+              contentType: 'image/jpeg',
+              upsert: true
+            }),
+          supabase.storage
+            .from('compressed')
+            .upload(`compressed/${eventId}/${file.name}`, compressedBuffer, {
+              contentType: 'image/jpeg',
+              upsert: true
+            })
+        ]);
 
-        console.log(`Archivo subido exitosamente: ${path}`);
-        return { path, name: file.name };
+        if (originalUpload.error) throw originalUpload.error;
+        if (compressedUpload.error) throw compressedUpload.error;
+
+        // Registrar en BD
+        const { data: image } = await supabase
+          .from('images')
+          .insert({
+            event_id: eventId,
+            photographer_id: photographerId,
+            original_url: `originals/${eventId}/${file.name}`,
+            compressed_url: `compressed/${eventId}/${file.name}`,
+            status: 'pending_ai',
+            tag
+          })
+          .select()
+          .single();
+
+        return image;
       })
     );
 
-    console.log('Todas las imágenes subidas, invocando función edge');
-    
-    const { data, error } = await supabase.functions.invoke('process-images', {
-      body: {
-        images: uploads,
-        eventId,
-        photographerId,
-        tag
+    // 2. Encolar procesamiento AI
+    await supabase.functions.invoke('process-ai', {
+      body: { 
+        images: uploads.map(img => ({
+          id: img.id,
+          compressed_url: img.compressed_url
+        }))
       }
     });
 
-    if (error) {
-      console.error('Error en función edge:', error);
-      throw error;
-    }
+    return NextResponse.json({ 
+      status: 'processing', 
+      count: files.length,
+      images: uploads 
+    });
 
-    console.log('Respuesta de función edge:', data);
-    return NextResponse.json({ status: 'processing', count: files.length });
-    
   } catch (error) {
-    console.error('Error en fast-upload:', error);
+    console.error('Error:', error);
     return NextResponse.json(
-      { error: 'Error procesando imágenes', details: error }, 
+      { error: 'Error procesando imágenes' }, 
       { status: 500 }
     );
   }

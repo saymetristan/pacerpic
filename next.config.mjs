@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: true
+  },
   images: {
     remotePatterns: [
       {
@@ -11,6 +14,12 @@ const nextConfig = {
         hostname: 'wdddgjpmoxhfzehbhlvf.supabase.co',
       },
     ],
+  },
+  webpack: (config) => {
+    config.externals.push({
+      'sharp': 'commonjs sharp'
+    });
+    return config;
   },
   serverRuntimeConfig: {
     api: {
