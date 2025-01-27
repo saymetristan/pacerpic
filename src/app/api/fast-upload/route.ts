@@ -26,66 +26,87 @@ export async function POST(req: Request) {
   );
 
   try {
-    // 1. Subir y comprimir en paralelo
-    const uploads = await Promise.all(
-      files.map(async (file) => {
-        const buffer = await file.arrayBuffer();
-        const compressedBuffer = await sharp(Buffer.from(buffer))
-          .resize(1300, 1300, { fit: 'inside' })
-          .jpeg({ quality: 80 })
-          .toBuffer();
+    // Aumentar tamaño del lote para subidas
+    const batchSize = 20;
+    const allUploads = [];
+    
+    // Dividir en chunks más grandes para subida inicial
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      console.log(`Procesando lote ${i/batchSize + 1} de ${Math.ceil(files.length/batchSize)}`);
 
-        // Subir original y comprimida
-        const [originalUpload, compressedUpload] = await Promise.all([
-          supabase.storage
-            .from('originals')
-            .upload(`originals/${eventId}/${file.name}`, buffer, {
-              contentType: 'image/jpeg',
-              upsert: true
-            }),
-          supabase.storage
-            .from('compressed')
-            .upload(`compressed/${eventId}/${file.name}`, compressedBuffer, {
-              contentType: 'image/jpeg',
-              upsert: true
+      const batchUploads = await Promise.all(
+        batch.map(async (file) => {
+          const buffer = await file.arrayBuffer();
+          const compressedBuffer = await sharp(Buffer.from(buffer))
+            .resize(1300, 1300, { fit: 'inside' })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+
+          // Subir en paralelo
+          const [originalUpload, compressedUpload] = await Promise.all([
+            supabase.storage
+              .from('originals')
+              .upload(`originals/${eventId}/${file.name}`, buffer, {
+                contentType: 'image/jpeg',
+                upsert: true
+              }),
+            supabase.storage
+              .from('compressed')
+              .upload(`compressed/${eventId}/${file.name}`, compressedBuffer, {
+                contentType: 'image/jpeg',
+                upsert: true
+              })
+          ]);
+
+          if (originalUpload.error) throw originalUpload.error;
+          if (compressedUpload.error) throw compressedUpload.error;
+
+          // Registrar en base de datos
+          const { data: image } = await supabase
+            .from('images')
+            .insert({
+              event_id: eventId,
+              photographer_id: photographerId,
+              original_url: `originals/${eventId}/${file.name}`,
+              compressed_url: `compressed/${eventId}/${file.name}`,
+              status: 'pending_ai',
+              tag,
+              batch_number: Math.floor(i/batchSize) // Agregar número de lote
             })
-        ]);
+            .select()
+            .single();
 
-        if (originalUpload.error) throw originalUpload.error;
-        if (compressedUpload.error) throw compressedUpload.error;
-
-        // Registrar en BD
-        const { data: image } = await supabase
-          .from('images')
-          .insert({
-            event_id: eventId,
-            photographer_id: photographerId,
-            original_url: `originals/${eventId}/${file.name}`,
-            compressed_url: `compressed/${eventId}/${file.name}`,
-            status: 'pending_ai',
-            tag
-          })
-          .select()
-          .single();
-
-        return image;
-      })
-    );
-
-    // 2. Encolar procesamiento AI
-    await supabase.functions.invoke('process-ai', {
-      body: { 
-        images: uploads.map(img => ({
-          id: img.id,
-          compressed_url: img.compressed_url
-        }))
+          return image;
+        })
+      );
+      
+      allUploads.push(...batchUploads);
+      
+      // Encolar procesamiento AI en lotes más pequeños
+      const aiBatchSize = 10;
+      for (let j = 0; j < batchUploads.length; j += aiBatchSize) {
+        const aiBatch = batchUploads.slice(j, j + aiBatchSize);
+        await supabase.functions.invoke('process-ai', {
+          body: { 
+            images: aiBatch.map(img => ({
+              id: img.id,
+              compressed_url: img.compressed_url
+            }))
+          }
+        });
       }
-    });
+    }
 
     return NextResponse.json({ 
       status: 'processing', 
       count: files.length,
-      images: uploads 
+      total_batches: Math.ceil(files.length/batchSize),
+      images: allUploads.map(img => ({
+        id: img.id,
+        status: img.status,
+        batch_number: img.batch_number
+      }))
     });
 
   } catch (error) {
