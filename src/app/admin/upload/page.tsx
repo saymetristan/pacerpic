@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 // Agrega este arreglo con los posibles tags
 const possibleTags = [
@@ -36,6 +37,7 @@ export default function UploadPage() {
   const { uploadEventImage, uploadProgress } = useImages();
   const files = Object.values(uploadProgress);
   const { toast } = useToast();
+  const { user } = useUser();
 
   const handleFileSelection = (acceptedFiles: File[]) => {
     setSelectedFiles(prev => [...prev, ...acceptedFiles]);
@@ -52,12 +54,42 @@ export default function UploadPage() {
     }
 
     try {
-      await Promise.all(
-        selectedFiles.map(file => uploadEventImage(file, selectedEventId, selectedTag))
-      );
+      const formData = new FormData();
+      
+      // Agregar cada archivo al FormData
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Agregar los demás campos
+      formData.append('eventId', selectedEventId);
+      formData.append('photographerId', user?.sub || ''); // Asegúrate de tener acceso al user
+      formData.append('tag', selectedTag);
+
+      const response = await fetch('/api/fast-upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al subir las imágenes');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Éxito",
+        description: `${result.count} imágenes en proceso de subida`,
+      });
+
       setSelectedFiles([]);
     } catch (err) {
       console.error("Error al subir las imágenes:", err);
+      toast({
+        title: "Error",
+        description: "Hubo un error al procesar las imágenes",
+        variant: "destructive"
+      });
     }
   };
 
