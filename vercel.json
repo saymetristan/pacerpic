@@ -1,7 +1,7 @@
 {
     "functions": {
       "api/fast-upload/*.ts": {
-        "runtime": "edge",
+        "runtime": "@vercel/node@3.0.0",
         "memory": 3008
       }
     },
