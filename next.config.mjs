@@ -12,11 +12,13 @@ const nextConfig = {
       },
     ],
   },
-  api: {
-    bodyParser: {
-      sizeLimit: '25mb'
-    },
-    responseLimit: '25mb'
+  serverRuntimeConfig: {
+    api: {
+      bodyParser: {
+        sizeLimit: '25mb'
+      },
+      responseLimit: '25mb'
+    }
   }
 };
 

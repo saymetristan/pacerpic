@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
-export const preferredRegion = 'sfo3'; // Región más cercana a México
+export const preferredRegion = 'sfo1'; // Región más cercana a México
 
 export async function POST(req: Request) {
   const formData = await req.formData();
